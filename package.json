@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/pieFi-platform/hashgraph-names-sdk/issues"
   },
-  "homepage": "https://github.com/pieFi-platform/hashgraph-names-sdk#readme"
+  "homepage": "https://github.com/pieFi-platform/hashgraph-names-sdk#readme",
+  "publishConfig": {
+    "@mamorite:registry": "https://npm.pkg.github.com"
+  }
 }
