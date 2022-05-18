@@ -1,5 +1,5 @@
 {
-  "name": "@mamorite/hashgraph-names-sdk",
+  "name": "@pieFi-platform/hashgraph-names-sdk",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/pieFi-platform/hashgraph-names-sdk#readme",
   "publishConfig": {
-    "@mamorite:registry": "https://npm.pkg.github.com"
+    "@pieFi-platform:registry": "https://npm.pkg.github.com"
   }
 }
