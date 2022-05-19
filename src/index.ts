@@ -2,8 +2,11 @@ import {
   AccountBalanceQuery,
   AccountId,
   Client,
+  NftId,
   PrivateKey,
   TokenId,
+  TokenNftInfo,
+  TokenNftInfoQuery,
 } from '@hashgraph/sdk';
 import keccak256 from 'keccak256';
 
@@ -73,7 +76,7 @@ export class HashgraphNames {
    * @param end: {number} The end index in the array of nodes of the manager
    * @returns {Promise<SerialInfo>}
    */
-  callGetSerial = async (
+  private callGetSerial = async (
     domainHash: Buffer,
     begin: number,
     end: number,
@@ -100,7 +103,7 @@ export class HashgraphNames {
  * @param domainHash: {Buffer} The hash of the domain to query
  * @returns {Promise<SerialInfo>}
  */
-  getDomainSerial = async (domainHash: Buffer): Promise<SerialInfo> => {
+  private getDomainSerial = async (domainHash: Buffer): Promise<SerialInfo> => {
     let decodedResult: SerialInfo = { serial: '0', node: '0' };
     try {
       const managerInfo = getManagerInfo();
@@ -136,9 +139,41 @@ export class HashgraphNames {
   };
 
   /**
- * @description Wrapper around getDomainOwner() that takes a string of the domain
+ * @description Simple wrapper around HTS TokenNftInfoQuery()
+ * @param serial: {number} The serial of the NFT to query
+ * @returns {Promise<TokenNftInfo>}
+ */
+  private getTokenNFTInfo = async (
+    serial: number,
+  ): Promise<TokenNftInfo> => {
+    try {
+      const nftId = new NftId(this.tokenId, serial);
+      const nftInfo = await new TokenNftInfoQuery()
+        .setNftId(nftId)
+        .execute(this.client);
+      return nftInfo[0];
+    } catch (err) {
+      logger.error(err);
+      throw new Error('Get NFT info failed');
+    }
+  };
+
+  /**
+ * @description Wrapper around getDomainSerial() that takes a string of the domain
  * @param domain: {string} The domain to query
  * @returns {Promise<SerialInfo>}
  */
   getNFTSerialString = async (domain: string): Promise<SerialInfo> => this.getDomainSerial(HashgraphNames.generateNFTHash(domain));
+
+  /**
+ * @description Gets the serial for the domain, then queries for the AccountId who owns
+ * that domain.
+ * @param domain: {string} The domain to query
+ * @returns {Promise<AccountId>}
+ */
+  getWallet = async (domain: string): Promise<AccountId> => {
+    const { serial } = await this.getNFTSerialString(domain);
+    const { accountId } = await this.getTokenNFTInfo(Number(serial));
+    return accountId;
+  };
 }

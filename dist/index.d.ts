@@ -27,18 +27,31 @@ export declare class HashgraphNames {
      * @param end: {number} The end index in the array of nodes of the manager
      * @returns {Promise<SerialInfo>}
      */
-    callGetSerial: (domainHash: Buffer, begin: number, end: number) => Promise<SerialInfo>;
+    private callGetSerial;
     /**
    * @description Query the registry for the owner of a domain
    * @param domainHash: {Buffer} The hash of the domain to query
    * @returns {Promise<SerialInfo>}
    */
-    getDomainSerial: (domainHash: Buffer) => Promise<SerialInfo>;
+    private getDomainSerial;
     /**
-   * @description Wrapper around getDomainOwner() that takes a string of the domain
+   * @description Simple wrapper around HTS TokenNftInfoQuery()
+   * @param serial: {number} The serial of the NFT to query
+   * @returns {Promise<TokenNftInfo>}
+   */
+    private getTokenNFTInfo;
+    /**
+   * @description Wrapper around getDomainSerial() that takes a string of the domain
    * @param domain: {string} The domain to query
    * @returns {Promise<SerialInfo>}
    */
     getNFTSerialString: (domain: string) => Promise<SerialInfo>;
+    /**
+   * @description Gets the serial for the domain, then queries for the AccountId who owns
+   * that domain.
+   * @param domain: {string} The domain to query
+   * @returns {Promise<AccountId>}
+   */
+    getWallet: (domain: string) => Promise<AccountId>;
 }
 export {};

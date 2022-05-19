@@ -81,11 +81,40 @@ class HashgraphNames {
             }
         };
         /**
-       * @description Wrapper around getDomainOwner() that takes a string of the domain
+       * @description Simple wrapper around HTS TokenNftInfoQuery()
+       * @param serial: {number} The serial of the NFT to query
+       * @returns {Promise<TokenNftInfo>}
+       */
+        this.getTokenNFTInfo = async (serial) => {
+            try {
+                const nftId = new sdk_1.NftId(this.tokenId, serial);
+                const nftInfo = await new sdk_1.TokenNftInfoQuery()
+                    .setNftId(nftId)
+                    .execute(this.client);
+                return nftInfo[0];
+            }
+            catch (err) {
+                logger_config_1.logger.error(err);
+                throw new Error('Get NFT info failed');
+            }
+        };
+        /**
+       * @description Wrapper around getDomainSerial() that takes a string of the domain
        * @param domain: {string} The domain to query
        * @returns {Promise<SerialInfo>}
        */
         this.getNFTSerialString = async (domain) => this.getDomainSerial(HashgraphNames.generateNFTHash(domain));
+        /**
+       * @description Gets the serial for the domain, then queries for the AccountId who owns
+       * that domain.
+       * @param domain: {string} The domain to query
+       * @returns {Promise<AccountId>}
+       */
+        this.getWallet = async (domain) => {
+            const { serial } = await this.getNFTSerialString(domain);
+            const { accountId } = await this.getTokenNFTInfo(Number(serial));
+            return accountId;
+        };
         this.operatorId = operatorId;
         this.operatorKey = operatorKey;
         this.client = sdk_1.Client.forTestnet().setOperator(this.operatorId, this.operatorKey);
