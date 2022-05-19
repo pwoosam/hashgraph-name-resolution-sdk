@@ -6,8 +6,12 @@
 // PrivateKey,
 // TokenId,
 // } from '@hashgraph/sdk';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.printBalance = exports.HashgraphNames = void 0;
+exports.printBalance = exports.hash = exports.HashgraphNames = void 0;
+const keccak256_1 = __importDefault(require("keccak256"));
 class HashgraphNames {
     constructor(text) {
         this.printMsg = () => {
@@ -18,6 +22,8 @@ class HashgraphNames {
     }
 }
 exports.HashgraphNames = HashgraphNames;
+const hash = (input) => (0, keccak256_1.default)(input);
+exports.hash = hash;
 const printBalance = () => {
     // eslint-disable-next-line no-console
     console.log('This is a test');

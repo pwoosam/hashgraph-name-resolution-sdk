@@ -6,6 +6,8 @@
 // TokenId,
 // } from '@hashgraph/sdk';
 
+import keccak256 from 'keccak256';
+
 export class HashgraphNames {
   text: string;
   constructor(text: string) {
@@ -17,6 +19,8 @@ export class HashgraphNames {
     console.log(this.text);
   };
 }
+
+export const hash = (input:string) => keccak256(input);
 
 export const printBalance = () => {
   // eslint-disable-next-line no-console
