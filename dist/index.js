@@ -1,7 +1,6 @@
 "use strict";
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HashgraphNames = void 0;
+exports.printBalance = exports.HashgraphNames = void 0;
 const sdk_1 = require("@hashgraph/sdk");
 class HashgraphNames {
     constructor(text) {
@@ -13,8 +12,7 @@ class HashgraphNames {
     }
 }
 exports.HashgraphNames = HashgraphNames;
-_a = HashgraphNames;
-HashgraphNames.printBalance = async () => {
+const printBalance = async () => {
     const opId = sdk_1.AccountId.fromString('0.0.18689954');
     const opKey = sdk_1.PrivateKey.fromString('302e020100300506032b6570042204205df941e9bfea39bd1acf0dab4abe73e82e4ef0f959f48bd342e538cc3bf08de5');
     const client = sdk_1.Client.forTestnet().setOperator(opId, opKey);
@@ -34,3 +32,4 @@ HashgraphNames.printBalance = async () => {
         hbar: Number(balanceCheckTx.hbars.toTinybars()),
     };
 };
+exports.printBalance = printBalance;
