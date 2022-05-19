@@ -2,8 +2,10 @@
   "name": "@piefi-platform/hashgraph-names-sdk",
   "version": "1.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "build": "tsc",
+    "fix-all-lint": "npx eslint . --fix --ext .ts",
     "test": "exit 0"
   },
   "repository": {
@@ -18,5 +20,15 @@
   "homepage": "https://github.com/pieFi-platform/hashgraph-names-sdk#readme",
   "publishConfig": {
     "@pieFi-platform:registry": "https://npm.pkg.github.com"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.23",
+    "@typescript-eslint/eslint-plugin": "^5.12.1",
+    "@typescript-eslint/parser": "^5.12.1",
+    "eslint": "^8.9.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "ts-node": "^10.4.0"
   }
 }
