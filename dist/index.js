@@ -8,9 +8,10 @@ const sdk_1 = require("@hashgraph/sdk");
 const keccak256_1 = __importDefault(require("keccak256"));
 const manager_1 = require("./manager");
 const contract_utils_1 = require("./contract.utils");
+const constants_config_1 = require("./config/constants.config");
 const logger_config_1 = require("./config/logger.config");
 class HashgraphNames {
-    constructor(operatorId, operatorKey) {
+    constructor(operatorId, operatorKey, supplyKey) {
         this.tokenId = sdk_1.TokenId.fromString('0.0.34853601');
         this.printBalance = async (accountId) => {
             const balanceCheckTx = await new sdk_1.AccountBalanceQuery()
@@ -28,7 +29,121 @@ class HashgraphNames {
                 hbar: Number(balanceCheckTx.hbars.toTinybars()),
             };
         };
-        this.mintDomain = async () => {
+        /**
+       * @description Simple wrapper around HTS TokenMintTransaction()
+       * @param metadata: {Buffer} The metadata to include on the newly minted NFT
+       * @returns {Promise<TransactionReceipt>}
+       */
+        this.mintNFT = async (metadata) => {
+            try {
+                const mintTx = await new sdk_1.TokenMintTransaction()
+                    .setTokenId(this.tokenId)
+                    .setMetadata([metadata])
+                    .freezeWith(this.client);
+                const mintTxSign = await mintTx.sign(this.supplyKey);
+                const mintTxSubmit = await mintTxSign.execute(this.client);
+                const mintRx = await mintTxSubmit.getReceipt(this.client);
+                if (mintRx.status._code !== sdk_1.Status.Success._code) {
+                    throw new Error('TokenMintTransaction failed');
+                }
+                return mintRx;
+            }
+            catch (err) {
+                logger_config_1.logger.error(err);
+                throw new Error('Failed to mint NFT');
+            }
+        };
+        /**
+       * @description Check if a token is associated with a specific account
+       * @param accountId: {AccountId} The account to check if the domain NFT is associated
+       * @returns {Promise<boolean>}
+       */
+        this.isTokenAssociatedToAccount = async (accountId) => {
+            try {
+                const balanceCheckTx = await new sdk_1.AccountBalanceQuery()
+                    .setAccountId(accountId)
+                    .execute(this.client);
+                if (!balanceCheckTx) {
+                    throw new Error('AccountBalanceQuery Failed');
+                }
+                const { tokens } = balanceCheckTx;
+                if (tokens) {
+                    const tokenOfInterest = tokens._map.get(this.tokenId.toString());
+                    return tokenOfInterest !== undefined;
+                }
+                return false;
+            }
+            catch (err) {
+                logger_config_1.logger.error(err);
+                throw new Error('Failed to determine if token is associated to account');
+            }
+        };
+        /**
+       * @description Check if a domain exists in the registry
+       * @param domainHash: {Buffer} The hash of the domain to check
+       * @returns {Promise<boolean>}
+       */
+        this.checkDomainExists = async (domainHash) => {
+            try {
+                const { serial } = await this.getDomainSerial(domainHash);
+                return Number(serial) !== 0;
+            }
+            catch (err) {
+                logger_config_1.logger.error(err);
+                throw new Error('Failed to check if domains exists');
+            }
+        };
+        /**
+       * @description Register a domain in the smart contract Registry
+       * @param domainHash: {Buffer} The hash of the domain to add to the Registry
+       * @param serial: {number} The serial of the NFT to register
+       * @returns {Promise<number>}
+       */
+        this.registerDomain = async (domainHash, serial) => {
+            try {
+                // Get manager contract from env
+                const managerInfo = (0, manager_1.getManagerInfo)();
+                // Add if not present
+                await (0, contract_utils_1.callContractFunc)(managerInfo.contract.id, managerInfo.abi, 'addRecord', [`0x${domainHash.toString('hex')}`, `${serial}`], this.client);
+                return constants_config_1.CONFIRMATION_STATUS;
+            }
+            catch (err) {
+                logger_config_1.logger.error(err);
+                throw new Error('Failed to register Domain');
+            }
+        };
+        /**
+       * @description Mints a new domain NFT and records it in the registry
+       * @throws {@link InternalServerError}
+       * @param domain {string} The domain to mint
+       * @param ownerId {string} The owner of the domain to mint
+       * @returns {Promise<number>}
+       */
+        this.mintDomain = async (domain, ownerId) => {
+            let NFTSerial;
+            let domainHash;
+            const accountId = sdk_1.AccountId.fromString(ownerId);
+            try {
+                domainHash = HashgraphNames.generateNFTHash(domain);
+                const domainExists = await this.checkDomainExists(domainHash);
+                if (domainExists)
+                    throw new Error('Domain already exists in the registry');
+                const isAssociated = await this.isTokenAssociatedToAccount(accountId);
+                if (!isAssociated)
+                    throw new Error('Wallet must first be associated before a token can be minted');
+                // Mint the NFT
+                const mintRx = await this.mintNFT(domainHash);
+                NFTSerial = Number(mintRx.serials[0]);
+                // Register the domain in the Registry
+                await this.registerDomain(domainHash, NFTSerial);
+                return constants_config_1.CONFIRMATION_STATUS;
+            }
+            catch (err) {
+                logger_config_1.logger.error(err);
+                throw new Error('Failed to mint domain.');
+            }
+        };
+        this.transferDomain = async () => {
             // eslint-disable-next-line no-console
             console.log(this.operatorId);
         };
@@ -117,6 +232,7 @@ class HashgraphNames {
         };
         this.operatorId = operatorId;
         this.operatorKey = operatorKey;
+        this.supplyKey = supplyKey;
         this.client = sdk_1.Client.forTestnet().setOperator(this.operatorId, this.operatorKey);
     }
 }

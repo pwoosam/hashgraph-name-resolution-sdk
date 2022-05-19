@@ -6,14 +6,48 @@ interface SerialInfo {
 export declare class HashgraphNames {
     operatorId: AccountId;
     operatorKey: PrivateKey;
+    supplyKey: PrivateKey;
     client: Client;
     tokenId: TokenId;
-    constructor(operatorId: AccountId, operatorKey: PrivateKey);
+    constructor(operatorId: AccountId, operatorKey: PrivateKey, supplyKey: PrivateKey);
     printBalance: (accountId: AccountId) => Promise<{
         nft: number;
         hbar: number;
     }>;
-    mintDomain: () => Promise<void>;
+    /**
+   * @description Simple wrapper around HTS TokenMintTransaction()
+   * @param metadata: {Buffer} The metadata to include on the newly minted NFT
+   * @returns {Promise<TransactionReceipt>}
+   */
+    private mintNFT;
+    /**
+   * @description Check if a token is associated with a specific account
+   * @param accountId: {AccountId} The account to check if the domain NFT is associated
+   * @returns {Promise<boolean>}
+   */
+    private isTokenAssociatedToAccount;
+    /**
+   * @description Check if a domain exists in the registry
+   * @param domainHash: {Buffer} The hash of the domain to check
+   * @returns {Promise<boolean>}
+   */
+    private checkDomainExists;
+    /**
+   * @description Register a domain in the smart contract Registry
+   * @param domainHash: {Buffer} The hash of the domain to add to the Registry
+   * @param serial: {number} The serial of the NFT to register
+   * @returns {Promise<number>}
+   */
+    private registerDomain;
+    /**
+   * @description Mints a new domain NFT and records it in the registry
+   * @throws {@link InternalServerError}
+   * @param domain {string} The domain to mint
+   * @param ownerId {string} The owner of the domain to mint
+   * @returns {Promise<number>}
+   */
+    mintDomain: (domain: string, ownerId: string) => Promise<number>;
+    transferDomain: () => Promise<void>;
     /**
      * @description Generate a hash of the provided domain string
      * @param domain: {string} The domain string to hash
