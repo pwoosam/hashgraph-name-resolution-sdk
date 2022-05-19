@@ -34,6 +34,7 @@
     "ts-node": "^10.4.0"
   },
   "dependencies": {
+    "@hashgraph/sdk": "^2.14.2",
     "keccak256": "^1.0.6"
   }
 }
