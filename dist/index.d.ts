@@ -3,4 +3,3 @@ export declare class HashgraphNames {
     constructor(text: string);
     printMsg(): void;
 }
-export declare const otherPrintFunc: () => void;

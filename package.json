@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "auto": "tsc --watch --preserveWatchOutput",
     "fix-all-lint": "npx eslint . --fix --ext .ts",
     "test": "exit 0"
   },

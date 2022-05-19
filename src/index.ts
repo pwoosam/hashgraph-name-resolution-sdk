@@ -9,8 +9,3 @@ export class HashgraphNames {
     console.log(this.text);
   }
 }
-
-export const otherPrintFunc = () => {
-  // eslint-disable-next-line no-console
-  console.log('ASDF');
-};
