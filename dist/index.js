@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HashgraphNames = void 0;
 const sdk_1 = require("@hashgraph/sdk");
+const keccak256_1 = __importDefault(require("keccak256"));
 const manager_1 = require("./manager");
 const contract_utils_1 = require("./contract.utils");
 const logger_config_1 = require("./config/logger.config");
@@ -35,9 +39,12 @@ class HashgraphNames {
          * @param end: {number} The end index in the array of nodes of the manager
          * @returns {Promise<OwnerInfo>}
          */
-        this.getSerial = async (domainHash, begin, end) => {
+        this.getSerial = async (domain, 
+        // domainHash: Buffer,
+        begin, end) => {
             try {
                 const managerInfo = (0, manager_1.getManagerInfo)();
+                const domainHash = HashgraphNames.generateNFTHash(domain);
                 const result = await (0, contract_utils_1.callContractFunc)(managerInfo.contract.id, managerInfo.abi, 'getSerial', [`0x${domainHash.toString('hex')}`, `${begin}`, `${end}`], this.client);
                 return { address: result[0], node: result[1] };
             }
@@ -52,3 +59,12 @@ class HashgraphNames {
     }
 }
 exports.HashgraphNames = HashgraphNames;
+/**
+ * @description Generate a hash of the provided domain string
+ * @param domain: {string} The domain string to hash
+ * @returns {Buffer}
+ */
+HashgraphNames.generateNFTHash = (domain) => {
+    const subDomains = domain.split('.').reverse();
+    return subDomains.reduce((prev, curr) => (0, keccak256_1.default)(prev + curr), Buffer.from([0]));
+};

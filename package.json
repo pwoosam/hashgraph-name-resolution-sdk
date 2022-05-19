@@ -37,6 +37,7 @@
     "@hashgraph/sdk": "^2.14.2"
   },
   "dependencies": {
+    "keccak256": "^1.0.6",
     "log4js": "^6.4.7",
     "web3": "^1.7.1"
   }
