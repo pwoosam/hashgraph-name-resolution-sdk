@@ -1,5 +1,9 @@
 export declare class HashgraphNames {
     text: string;
     constructor(text: string);
-    printMsg(): void;
+    printMsg: () => void;
+    static printBalance: () => Promise<{
+        nft: number;
+        hbar: number;
+    }>;
 }
