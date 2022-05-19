@@ -1,0 +1,24 @@
+import { ContractId } from '@hashgraph/sdk';
+
+const MANAGER_ID = '0.0.34407866';
+const MANAGER_ABI = '.\\src\\contracts\\abi\\src_contracts_hnsLL_sol_NodeManager.abi';
+
+export interface ManagerContract {
+  id: ContractId;
+  address: string;
+}
+
+export interface ManagerInfo {
+  contract: ManagerContract;
+  abi: string;
+}
+
+export const getManagerInfo = (): ManagerInfo => {
+  const managerId: ContractId = ContractId.fromString(MANAGER_ID);
+  const abi: string = MANAGER_ABI;
+  const contract: ManagerContract = {
+    id: managerId,
+    address: managerId.toSolidityAddress(),
+  };
+  return { contract, abi };
+};
