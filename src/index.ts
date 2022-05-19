@@ -1,10 +1,10 @@
-// import {
-//   AccountBalanceQuery,
-// AccountId,
+import {
+  // AccountBalanceQuery,
+  AccountId,
 // Client,
 // PrivateKey,
 // TokenId,
-// } from '@hashgraph/sdk';
+} from '@hashgraph/sdk';
 
 import keccak256 from 'keccak256';
 
@@ -25,9 +25,9 @@ export const hash = (input:string) => keccak256(input);
 export const printBalance = () => {
   // eslint-disable-next-line no-console
   console.log('This is a test');
-  // const opId = AccountId.fromString('0.0.18689954');
-  // // eslint-disable-next-line no-console
-  // console.log(opId);
+  const opId = AccountId.fromString('0.0.18689954');
+  // eslint-disable-next-line no-console
+  console.log(opId);
   // const opKey = PrivateKey
   // .fromString('302e020100300506032b6570042204205df941e9bfea39bd1acf0dab4abe73e82e4ef0f959f48bd342e538cc3bf08de5');
   // const client = Client.forTestnet().setOperator(opId, opKey);

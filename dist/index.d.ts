@@ -1,4 +1,3 @@
-/// <reference types="node" />
 export declare class HashgraphNames {
     text: string;
     constructor(text: string);
