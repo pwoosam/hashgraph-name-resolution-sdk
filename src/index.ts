@@ -1,4 +1,4 @@
-class HashgraphNames {
+export class HashgraphNames {
   text: string;
   constructor(text: string) {
     this.text = text;
@@ -10,4 +10,7 @@ class HashgraphNames {
   }
 }
 
-export default HashgraphNames;
+export const otherPrintFunc = () => {
+  // eslint-disable-next-line no-console
+  console.log('ASDF');
+};
