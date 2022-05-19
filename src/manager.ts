@@ -1,7 +1,7 @@
 import { ContractId } from '@hashgraph/sdk';
 
 const MANAGER_ID = '0.0.34407866';
-const MANAGER_ABI = '.\\src\\contracts\\abi\\src_contracts_hnsLL_sol_NodeManager.abi';
+const MANAGER_ABI = 'node_modules\\@piefi-platform\\hashgraph-names-sdk\\src\\contracts\\abi\\src_contracts_nsNodes_sol_NSNodeManager.abi';
 
 export interface ManagerContract {
   id: ContractId;
