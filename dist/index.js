@@ -1,8 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.printMsg = void 0;
-function printMsg() {
-    // eslint-disable-next-line no-console
-    console.log('This is a test');
+class HashgraphNames {
+    constructor(text) {
+        this.text = text;
+    }
+    printMsg() {
+        // eslint-disable-next-line no-console
+        console.log(this.text);
+    }
 }
-exports.printMsg = printMsg;
+exports.default = HashgraphNames;
