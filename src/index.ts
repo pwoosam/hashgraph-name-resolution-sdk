@@ -11,8 +11,8 @@ import { getManagerInfo, ManagerInfo } from './manager';
 import { callContractFunc } from './contract.utils';
 import { logger } from './config/logger.config';
 
-interface OwnerInfo {
-  address: string;
+interface SerialInfo {
+  serial: string;
   node: string;
 }
 
@@ -71,17 +71,15 @@ export class HashgraphNames {
    * @param domainHash: {Buffer} The hash of the domain to query
    * @param begin: {number} The begin index in the array of nodes of the manager
    * @param end: {number} The end index in the array of nodes of the manager
-   * @returns {Promise<OwnerInfo>}
+   * @returns {Promise<SerialInfo>}
    */
-  getSerial = async (
-    domain: string,
-    // domainHash: Buffer,
+  callGetSerial = async (
+    domainHash: Buffer,
     begin: number,
     end: number,
-  ): Promise<OwnerInfo> => {
+  ): Promise<SerialInfo> => {
     try {
       const managerInfo: ManagerInfo = getManagerInfo();
-      const domainHash: Buffer = HashgraphNames.generateNFTHash(domain);
 
       const result = await callContractFunc(
         managerInfo.contract.id,
@@ -90,10 +88,57 @@ export class HashgraphNames {
         [`0x${domainHash.toString('hex')}`, `${begin}`, `${end}`],
         this.client,
       );
-      return { address: result[0], node: result[1] };
+      return { serial: result[0], node: result[1] };
     } catch (err) {
       logger.error(err);
       throw new Error('Failed to get owner');
     }
   };
+
+  /**
+ * @description Query the registry for the owner of a domain
+ * @param domainHash: {Buffer} The hash of the domain to query
+ * @returns {Promise<SerialInfo>}
+ */
+  getDomainSerial = async (domainHash: Buffer): Promise<SerialInfo> => {
+    let decodedResult: SerialInfo = { serial: '0', node: '0' };
+    try {
+      const managerInfo = getManagerInfo();
+
+      const numNodes: number = (
+        await callContractFunc(
+          managerInfo.contract.id,
+          managerInfo.abi,
+          'getNumNodes',
+          [],
+          this.client,
+        )
+      )[0];
+
+      const chunkSize = 100;
+      let begin = 0;
+      let end = 0;
+      for (let i = 0; end < numNodes; i += 1) {
+        end = Number((i + 1) * chunkSize);
+        // eslint-disable-next-line no-await-in-loop
+        decodedResult = await this.callGetSerial(domainHash, begin, end);
+        if (Number(decodedResult.serial) !== Number(0)) {
+        // Found the owner
+          break;
+        }
+        begin = end;
+      }
+      return decodedResult;
+    } catch (err) {
+      logger.error(err);
+      throw new Error('Failed to get owner');
+    }
+  };
+
+  /**
+ * @description Wrapper around getDomainOwner() that takes a string of the domain
+ * @param domain: {string} The domain to query
+ * @returns {Promise<SerialInfo>}
+ */
+  getNFTSerialString = async (domain: string): Promise<SerialInfo> => this.getDomainSerial(HashgraphNames.generateNFTHash(domain));
 }

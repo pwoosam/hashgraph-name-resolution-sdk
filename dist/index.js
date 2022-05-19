@@ -37,22 +37,55 @@ class HashgraphNames {
          * @param domainHash: {Buffer} The hash of the domain to query
          * @param begin: {number} The begin index in the array of nodes of the manager
          * @param end: {number} The end index in the array of nodes of the manager
-         * @returns {Promise<OwnerInfo>}
+         * @returns {Promise<SerialInfo>}
          */
-        this.getSerial = async (domain, 
-        // domainHash: Buffer,
-        begin, end) => {
+        this.callGetSerial = async (domainHash, begin, end) => {
             try {
                 const managerInfo = (0, manager_1.getManagerInfo)();
-                const domainHash = HashgraphNames.generateNFTHash(domain);
                 const result = await (0, contract_utils_1.callContractFunc)(managerInfo.contract.id, managerInfo.abi, 'getSerial', [`0x${domainHash.toString('hex')}`, `${begin}`, `${end}`], this.client);
-                return { address: result[0], node: result[1] };
+                return { serial: result[0], node: result[1] };
             }
             catch (err) {
                 logger_config_1.logger.error(err);
                 throw new Error('Failed to get owner');
             }
         };
+        /**
+       * @description Query the registry for the owner of a domain
+       * @param domainHash: {Buffer} The hash of the domain to query
+       * @returns {Promise<SerialInfo>}
+       */
+        this.getDomainSerial = async (domainHash) => {
+            let decodedResult = { serial: '0', node: '0' };
+            try {
+                const managerInfo = (0, manager_1.getManagerInfo)();
+                const numNodes = (await (0, contract_utils_1.callContractFunc)(managerInfo.contract.id, managerInfo.abi, 'getNumNodes', [], this.client))[0];
+                const chunkSize = 100;
+                let begin = 0;
+                let end = 0;
+                for (let i = 0; end < numNodes; i += 1) {
+                    end = Number((i + 1) * chunkSize);
+                    // eslint-disable-next-line no-await-in-loop
+                    decodedResult = await this.callGetSerial(domainHash, begin, end);
+                    if (Number(decodedResult.serial) !== Number(0)) {
+                        // Found the owner
+                        break;
+                    }
+                    begin = end;
+                }
+                return decodedResult;
+            }
+            catch (err) {
+                logger_config_1.logger.error(err);
+                throw new Error('Failed to get owner');
+            }
+        };
+        /**
+       * @description Wrapper around getDomainOwner() that takes a string of the domain
+       * @param domain: {string} The domain to query
+       * @returns {Promise<SerialInfo>}
+       */
+        this.getNFTSerialString = async (domain) => this.getDomainSerial(HashgraphNames.generateNFTHash(domain));
         this.operatorId = operatorId;
         this.operatorKey = operatorKey;
         this.client = sdk_1.Client.forTestnet().setOperator(this.operatorId, this.operatorKey);

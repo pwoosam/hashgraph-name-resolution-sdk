@@ -1,6 +1,6 @@
 import { AccountId, Client, PrivateKey, TokenId } from '@hashgraph/sdk';
-interface OwnerInfo {
-    address: string;
+interface SerialInfo {
+    serial: string;
     node: string;
 }
 export declare class HashgraphNames {
@@ -25,8 +25,20 @@ export declare class HashgraphNames {
      * @param domainHash: {Buffer} The hash of the domain to query
      * @param begin: {number} The begin index in the array of nodes of the manager
      * @param end: {number} The end index in the array of nodes of the manager
-     * @returns {Promise<OwnerInfo>}
+     * @returns {Promise<SerialInfo>}
      */
-    getSerial: (domain: string, begin: number, end: number) => Promise<OwnerInfo>;
+    callGetSerial: (domainHash: Buffer, begin: number, end: number) => Promise<SerialInfo>;
+    /**
+   * @description Query the registry for the owner of a domain
+   * @param domainHash: {Buffer} The hash of the domain to query
+   * @returns {Promise<SerialInfo>}
+   */
+    getDomainSerial: (domainHash: Buffer) => Promise<SerialInfo>;
+    /**
+   * @description Wrapper around getDomainOwner() that takes a string of the domain
+   * @param domain: {string} The domain to query
+   * @returns {Promise<SerialInfo>}
+   */
+    getNFTSerialString: (domain: string) => Promise<SerialInfo>;
 }
 export {};
