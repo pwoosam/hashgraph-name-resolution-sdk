@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import Web3 from 'web3';
 import {
   Client,
@@ -23,7 +24,7 @@ export const decodeFunctionResult = (
   resultAsBytes: Uint8Array,
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any => {
-  const abi = JSON.parse(fs.readFileSync(abiPath, 'utf8'));
+  const abi = JSON.parse(fs.readFileSync(path.resolve(__dirname, abiPath), 'utf8'));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const functionAbi = abi.find((func: any) => func.name === functionName);
@@ -43,7 +44,7 @@ export const encodeFunctionCall = (
   abiPath: string,
   parameters: string[],
 ): Buffer => {
-  const abi = JSON.parse(fs.readFileSync(abiPath, 'utf8'));
+  const abi = JSON.parse(fs.readFileSync(path.resolve(__dirname, abiPath), 'utf8'));
 
   const functionAbi = abi.find(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

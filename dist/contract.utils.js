@@ -28,6 +28,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.callContractFunc = exports.encodeFunctionCall = exports.decodeFunctionResult = void 0;
 const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 const web3_1 = __importDefault(require("web3"));
 const sdk_1 = require("@hashgraph/sdk");
 const logger_config_1 = require("./config/logger.config");
@@ -39,7 +40,7 @@ const MAX_GAS = 4000000;
  * @param resultAsBytes a byte array containing the execution result
  */
 const decodeFunctionResult = (functionName, abiPath, resultAsBytes) => {
-    const abi = JSON.parse(fs.readFileSync(abiPath, 'utf8'));
+    const abi = JSON.parse(fs.readFileSync(path.resolve(__dirname, abiPath), 'utf8'));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const functionAbi = abi.find((func) => func.name === functionName);
     const functionParameters = functionAbi.outputs;
@@ -54,7 +55,7 @@ exports.decodeFunctionResult = decodeFunctionResult;
  * @param parameters the array of parameters to pass to the function
  */
 const encodeFunctionCall = (functionName, abiPath, parameters) => {
-    const abi = JSON.parse(fs.readFileSync(abiPath, 'utf8'));
+    const abi = JSON.parse(fs.readFileSync(path.resolve(__dirname, abiPath), 'utf8'));
     const functionAbi = abi.find(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (func) => func.name === functionName && func.type === 'function');
