@@ -1,6 +1,6 @@
-declare class HashgraphNames {
+export declare class HashgraphNames {
     text: string;
     constructor(text: string);
     printMsg(): void;
 }
-export default HashgraphNames;
+export declare const otherPrintFunc: () => void;
