@@ -3,5 +3,7 @@ export declare class HashgraphNames {
     constructor(text: string);
     printMsg: () => void;
 }
-export declare const hash: (input: string) => Buffer;
-export declare const printBalance: () => void;
+export declare const printBalance: () => Promise<{
+    nft: number;
+    hbar: number;
+}>;

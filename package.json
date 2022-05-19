@@ -33,9 +33,6 @@
     "eslint-plugin-import": "^2.26.0",
     "ts-node": "^10.4.0"
   },
-  "dependencies": {
-    "keccak256": "^1.0.6"
-  },
   "peerDependencies": {
     "@hashgraph/sdk": "^2.14.2"
   }
