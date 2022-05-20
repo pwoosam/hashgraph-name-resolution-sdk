@@ -13,6 +13,7 @@ const manager_1 = require("./manager");
 class HashgraphNames {
     constructor(operatorId, operatorKey, supplyKey) {
         this.tokenId = sdk_1.TokenId.fromString('0.0.34853601');
+        // TODO: This function is just for testing, remove it.
         this.printBalance = async (accountId) => {
             const balanceCheckTx = await new sdk_1.AccountBalanceQuery()
                 .setAccountId(accountId)
@@ -36,9 +37,9 @@ class HashgraphNames {
        */
         this.mintNFT = async (metadata) => {
             try {
-                const mintTx = await new sdk_1.TokenMintTransaction()
+                const mintTx = new sdk_1.TokenMintTransaction()
                     .setTokenId(this.tokenId)
-                    .setMetadata([metadata])
+                    .setMetadata([Buffer.from(metadata)])
                     .freezeWith(this.client);
                 const mintTxSign = await mintTx.sign(this.supplyKey);
                 const mintTxSubmit = await mintTxSign.execute(this.client);
@@ -132,7 +133,8 @@ class HashgraphNames {
                 if (!isAssociated)
                     throw new Error('Wallet must first be associated before a token can be minted');
                 // Mint the NFT
-                const mintRx = await this.mintNFT(domainHash);
+                const metadata = HashgraphNames.generateMetadata(domain);
+                const mintRx = await this.mintNFT(metadata);
                 NFTSerial = Number(mintRx.serials[0]);
                 // Register the domain in the Registry
                 await this.registerDomain(domainHash, NFTSerial);
@@ -272,9 +274,15 @@ class HashgraphNames {
        * @returns {Promise<AccountId>}
        */
         this.getWallet = async (domain) => {
-            const { serial } = await this.getNFTSerialString(domain);
-            const { accountId } = await this.getTokenNFTInfo(Number(serial));
-            return accountId;
+            try {
+                const { serial } = await this.getNFTSerialString(domain);
+                const { accountId } = await this.getTokenNFTInfo(Number(serial));
+                return accountId;
+            }
+            catch (err) {
+                logger_config_1.logger.error(err);
+                throw new Error('Failed to get wallet');
+            }
         };
         this.operatorId = sdk_1.AccountId.fromString(operatorId);
         this.operatorKey = sdk_1.PrivateKey.fromString(operatorKey);
@@ -283,6 +291,21 @@ class HashgraphNames {
     }
 }
 exports.HashgraphNames = HashgraphNames;
+HashgraphNames.generateMetadata = (domain) => {
+    const metadata = {
+        name: domain,
+        creator: 'piefi labs',
+        creatorDID: '',
+        description: 'NFT representation of a domain registered under the Hashgraph Names naming service',
+        image: '[cid or path to NFT\'s image]',
+        type: 'image/jpeg',
+        files: [],
+        format: 'none',
+        properties: [],
+        localization: [],
+    };
+    return metadata;
+};
 /**
 * @description Helper function to convert an Uint8Array into an Hedera Transaction type
 * @param transactionBytes: {Uint8Array} The transaction bytes to be converted

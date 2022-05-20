@@ -31,6 +31,26 @@ interface TransactionSignature {
   signature: Uint8Array;
 }
 
+interface File {
+  uri: string;
+  type: string;
+  metadata: object;
+  metadata_uri: object;
+}
+
+interface NFTMetadata {
+  name: string;
+  creator: string;
+  creatorDID: string;
+  description: string;
+  image: string;
+  type: string;
+  files: File[];
+  format: string;
+  properties: object[];
+  localization: object[];
+}
+
 export class HashgraphNames {
   operatorId: AccountId;
   operatorKey: PrivateKey;
@@ -46,6 +66,7 @@ export class HashgraphNames {
     this.client = Client.forTestnet().setOperator(this.operatorId, this.operatorKey);
   }
 
+  // TODO: This function is just for testing, remove it.
   printBalance = async (accountId: AccountId) => {
     const balanceCheckTx = await new AccountBalanceQuery()
       .setAccountId(accountId)
@@ -65,18 +86,35 @@ export class HashgraphNames {
     };
   };
 
+  static generateMetadata = (domain: string): NFTMetadata => {
+    const metadata: NFTMetadata = {
+      name: domain,
+      creator: 'piefi labs',
+      creatorDID: '',
+      description: 'NFT representation of a domain registered under the Hashgraph Names naming service',
+      image: '[cid or path to NFT\'s image]',
+      type: 'image/jpeg', // TODO: Change this to whatever file type we end up generating for the NFT images
+      files: [],
+      format: 'none',
+      properties: [],
+      localization: [],
+    };
+
+    return metadata;
+  };
+
   /**
  * @description Simple wrapper around HTS TokenMintTransaction()
  * @param metadata: {Buffer} The metadata to include on the newly minted NFT
  * @returns {Promise<TransactionReceipt>}
  */
   private mintNFT = async (
-    metadata: Buffer,
+    metadata: NFTMetadata,
   ): Promise<TransactionReceipt> => {
     try {
-      const mintTx = await new TokenMintTransaction()
+      const mintTx = new TokenMintTransaction()
         .setTokenId(this.tokenId)
-        .setMetadata([metadata])
+        .setMetadata([Buffer.from(metadata)])
         .freezeWith(this.client);
       const mintTxSign = await mintTx.sign(this.supplyKey);
       const mintTxSubmit = await mintTxSign.execute(this.client);
@@ -193,7 +231,8 @@ export class HashgraphNames {
       if (!isAssociated) throw new Error('Wallet must first be associated before a token can be minted');
 
       // Mint the NFT
-      const mintRx = await this.mintNFT(domainHash);
+      const metadata = HashgraphNames.generateMetadata(domain);
+      const mintRx = await this.mintNFT(metadata);
       NFTSerial = Number(mintRx.serials[0]);
 
       // Register the domain in the Registry
@@ -408,8 +447,13 @@ export class HashgraphNames {
  * @returns {Promise<AccountId>}
  */
   getWallet = async (domain: string): Promise<AccountId> => {
-    const { serial } = await this.getNFTSerialString(domain);
-    const { accountId } = await this.getTokenNFTInfo(Number(serial));
-    return accountId;
+    try {
+      const { serial } = await this.getNFTSerialString(domain);
+      const { accountId } = await this.getTokenNFTInfo(Number(serial));
+      return accountId;
+    } catch (err) {
+      logger.error(err);
+      throw new Error('Failed to get wallet');
+    }
   };
 }

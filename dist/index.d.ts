@@ -7,6 +7,24 @@ interface TransactionSignature {
     signerPublicKey: PublicKey;
     signature: Uint8Array;
 }
+interface File {
+    uri: string;
+    type: string;
+    metadata: object;
+    metadata_uri: object;
+}
+interface NFTMetadata {
+    name: string;
+    creator: string;
+    creatorDID: string;
+    description: string;
+    image: string;
+    type: string;
+    files: File[];
+    format: string;
+    properties: object[];
+    localization: object[];
+}
 export declare class HashgraphNames {
     operatorId: AccountId;
     operatorKey: PrivateKey;
@@ -18,6 +36,7 @@ export declare class HashgraphNames {
         nft: number;
         hbar: number;
     }>;
+    static generateMetadata: (domain: string) => NFTMetadata;
     /**
    * @description Simple wrapper around HTS TokenMintTransaction()
    * @param metadata: {Buffer} The metadata to include on the newly minted NFT
