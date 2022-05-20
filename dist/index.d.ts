@@ -9,7 +9,7 @@ export declare class HashgraphNames {
     supplyKey: PrivateKey;
     client: Client;
     tokenId: TokenId;
-    constructor(operatorId: AccountId, operatorKey: PrivateKey, supplyKey: PrivateKey);
+    constructor(operatorId: string, operatorKey: string, supplyKey: string);
     printBalance: (accountId: AccountId) => Promise<{
         nft: number;
         hbar: number;

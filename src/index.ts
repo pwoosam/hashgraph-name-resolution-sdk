@@ -30,10 +30,10 @@ export class HashgraphNames {
   client: Client;
   tokenId: TokenId = TokenId.fromString('0.0.34853601');
 
-  constructor(operatorId: AccountId, operatorKey: PrivateKey, supplyKey: PrivateKey) {
-    this.operatorId = operatorId;
-    this.operatorKey = operatorKey;
-    this.supplyKey = supplyKey;
+  constructor(operatorId: string, operatorKey: string, supplyKey: string) {
+    this.operatorId = AccountId.fromString(operatorId);
+    this.operatorKey = PrivateKey.fromString(operatorKey);
+    this.supplyKey = PrivateKey.fromString(supplyKey);
 
     this.client = Client.forTestnet().setOperator(this.operatorId, this.operatorKey);
   }

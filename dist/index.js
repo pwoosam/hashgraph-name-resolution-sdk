@@ -230,9 +230,9 @@ class HashgraphNames {
             const { accountId } = await this.getTokenNFTInfo(Number(serial));
             return accountId;
         };
-        this.operatorId = operatorId;
-        this.operatorKey = operatorKey;
-        this.supplyKey = supplyKey;
+        this.operatorId = sdk_1.AccountId.fromString(operatorId);
+        this.operatorKey = sdk_1.PrivateKey.fromString(operatorKey);
+        this.supplyKey = sdk_1.PrivateKey.fromString(supplyKey);
         this.client = sdk_1.Client.forTestnet().setOperator(this.operatorId, this.operatorKey);
     }
 }
