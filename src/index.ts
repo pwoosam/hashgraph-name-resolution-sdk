@@ -247,15 +247,15 @@ export class HashgraphNames {
 
   /**
  * @description Signs a Hedera transaction
- * @param signerKey: {PrivateKey} The private key with which to sign the transaction
+ * @param signerKey: {string} The private key with which to sign the transaction
  * @param transactionBytes: {Uint8Array} The bytes for the transaction to be signed
  * @returns {Promise<Uint8Array>}
  */
-  static transferTransactionSign = (signerKey: PrivateKey, transactionBytes: Uint8Array): TransactionSignature => {
+  static transferTransactionSign = (signerKey: string, transactionBytes: Uint8Array): TransactionSignature => {
     const transaction: Transaction = HashgraphNames.bytesToTransaction(transactionBytes);
-
-    const signature = signerKey.signTransaction(transaction);
-    return { signerPublicKey: signerKey.publicKey, signature };
+    const signerPVKey = PrivateKey.fromString(signerKey);
+    const signature = signerPVKey.signTransaction(transaction);
+    return { signerPublicKey: signerPVKey.publicKey, signature };
   };
 
   /**

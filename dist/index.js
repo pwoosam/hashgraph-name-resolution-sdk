@@ -293,14 +293,15 @@ HashgraphNames.bytesToTransaction = (transactionBytes) => {
 };
 /**
 * @description Signs a Hedera transaction
-* @param signerKey: {PrivateKey} The private key with which to sign the transaction
+* @param signerKey: {string} The private key with which to sign the transaction
 * @param transactionBytes: {Uint8Array} The bytes for the transaction to be signed
 * @returns {Promise<Uint8Array>}
 */
 HashgraphNames.transferTransactionSign = (signerKey, transactionBytes) => {
     const transaction = HashgraphNames.bytesToTransaction(transactionBytes);
-    const signature = signerKey.signTransaction(transaction);
-    return { signerPublicKey: signerKey.publicKey, signature };
+    const signerPVKey = sdk_1.PrivateKey.fromString(signerKey);
+    const signature = signerPVKey.signTransaction(transaction);
+    return { signerPublicKey: signerPVKey.publicKey, signature };
 };
 /**
  * @description Generate a hash of the provided domain string

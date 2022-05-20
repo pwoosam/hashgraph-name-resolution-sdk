@@ -66,11 +66,11 @@ export declare class HashgraphNames {
     transferDomain: (ownerSignature: TransactionSignature, receiverSignature: TransactionSignature, transactionBytes: Uint8Array) => Promise<number>;
     /**
    * @description Signs a Hedera transaction
-   * @param signerKey: {PrivateKey} The private key with which to sign the transaction
+   * @param signerKey: {string} The private key with which to sign the transaction
    * @param transactionBytes: {Uint8Array} The bytes for the transaction to be signed
    * @returns {Promise<Uint8Array>}
    */
-    static transferTransactionSign: (signerKey: PrivateKey, transactionBytes: Uint8Array) => TransactionSignature;
+    static transferTransactionSign: (signerKey: string, transactionBytes: Uint8Array) => TransactionSignature;
     /**
    * @description Creates a HTS TransferTransaction and returns it as an Uint8Array
    * @param serial: {number} The serial for the NFT to transfer
