@@ -6,10 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.HashgraphNames = void 0;
 const sdk_1 = require("@hashgraph/sdk");
 const keccak256_1 = __importDefault(require("keccak256"));
-const manager_1 = require("./manager");
-const contract_utils_1 = require("./contract.utils");
 const constants_config_1 = require("./config/constants.config");
 const logger_config_1 = require("./config/logger.config");
+const contract_utils_1 = require("./contract.utils");
+const manager_1 = require("./manager");
 class HashgraphNames {
     constructor(operatorId, operatorKey, supplyKey) {
         this.tokenId = sdk_1.TokenId.fromString('0.0.34853601');
@@ -143,9 +143,54 @@ class HashgraphNames {
                 throw new Error('Failed to mint domain.');
             }
         };
-        this.transferDomain = async () => {
-            // eslint-disable-next-line no-console
-            console.log(this.operatorId);
+        /**
+       * @description Executes an HTS TransferTransaction
+       * @param ownerSignature: {TransactionSignature} The signature information for the NFT owner
+       * @param receiverSignature: {TransactionSignature} The signature information for the NFT receiver
+       * @param transactionBytes: {Uint8Array} The transaction bytes to be executed
+       * @returns {Promise<number>}
+       */
+        this.transferDomain = async (ownerSignature, receiverSignature, transactionBytes) => {
+            try {
+                const transaction = HashgraphNames.bytesToTransaction(transactionBytes);
+                transaction
+                    .addSignature(ownerSignature.signerPublicKey, ownerSignature.signature)
+                    .addSignature(receiverSignature.signerPublicKey, receiverSignature.signature);
+                const submitTransaction = await transaction.execute(this.client);
+                const receipt = await submitTransaction.getReceipt(this.client);
+                if (receipt.status._code !== sdk_1.Status.Success._code) {
+                    throw new Error('TransferTransaction failed');
+                }
+            }
+            catch (err) {
+                throw new Error('Transfer Domain failed');
+            }
+            return constants_config_1.CONFIRMATION_STATUS;
+        };
+        /**
+       * @description Creates a HTS TransferTransaction and returns it as an Uint8Array
+       * @param serial: {number} The serial for the NFT to transfer
+       * @param NFTOwner: {string} The account id of the NFT owner
+       * @param NFTReceiver: {string} The account id of the NFT receiver
+       * @param purchasePrice: {number} The amount in tinyBar for which the NFT is being purchased
+       * @returns {Uint8Array}
+       */
+        this.transferTransactionCreate = (serial, NFTOwner, NFTReceiver, purchasePrice) => {
+            try {
+                const fromIdNFT = sdk_1.AccountId.fromString(NFTOwner);
+                const toIdNFT = sdk_1.AccountId.fromString(NFTReceiver);
+                const nodeId = [new sdk_1.AccountId(3)];
+                const tokenTransferTx = new sdk_1.TransferTransaction()
+                    .addNftTransfer(this.tokenId, serial, fromIdNFT, toIdNFT)
+                    .addHbarTransfer(toIdNFT, sdk_1.Hbar.fromTinybars(-1 * purchasePrice))
+                    .addHbarTransfer(fromIdNFT, sdk_1.Hbar.fromTinybars(purchasePrice))
+                    .setNodeAccountIds(nodeId)
+                    .freezeWith(this.client);
+                return tokenTransferTx.toBytes();
+            }
+            catch (err) {
+                throw new Error('MultiSig transaction create failed');
+            }
         };
         /**
          * @description Simple wrapper around callContractFunc for the getSerial smart contract function
@@ -237,6 +282,26 @@ class HashgraphNames {
     }
 }
 exports.HashgraphNames = HashgraphNames;
+/**
+* @description Helper function to convert an Uint8Array into an Hedera Transaction type
+* @param transactionBytes: {Uint8Array} The transaction bytes to be converted
+*/
+HashgraphNames.bytesToTransaction = (transactionBytes) => {
+    const uint8Array = new Uint8Array(transactionBytes);
+    const transaction = sdk_1.Transaction.fromBytes(uint8Array);
+    return transaction;
+};
+/**
+* @description Signs a Hedera transaction
+* @param signerKey: {PrivateKey} The private key with which to sign the transaction
+* @param transactionBytes: {Uint8Array} The bytes for the transaction to be signed
+* @returns {Promise<Uint8Array>}
+*/
+HashgraphNames.transferTransactionSign = (signerKey, transactionBytes) => {
+    const transaction = HashgraphNames.bytesToTransaction(transactionBytes);
+    const signature = signerKey.signTransaction(transaction);
+    return { signerPublicKey: signerKey.publicKey, signature };
+};
 /**
  * @description Generate a hash of the provided domain string
  * @param domain: {string} The domain string to hash

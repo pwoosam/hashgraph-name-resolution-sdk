@@ -2,25 +2,33 @@ import {
   AccountBalanceQuery,
   AccountId,
   Client,
+  Hbar,
   NftId,
   PrivateKey,
+  PublicKey,
   Status,
   TokenId,
   TokenMintTransaction,
   TokenNftInfo,
   TokenNftInfoQuery,
+  Transaction,
   TransactionReceipt,
+  TransferTransaction,
 } from '@hashgraph/sdk';
 import keccak256 from 'keccak256';
-
-import { getManagerInfo, ManagerInfo } from './manager';
-import { callContractFunc } from './contract.utils';
 import { CONFIRMATION_STATUS } from './config/constants.config';
 import { logger } from './config/logger.config';
+import { callContractFunc } from './contract.utils';
+import { getManagerInfo, ManagerInfo } from './manager';
 
 interface SerialInfo {
   serial: string;
   node: string;
+}
+
+interface TransactionSignature {
+  signerPublicKey: PublicKey;
+  signature: Uint8Array;
 }
 
 export class HashgraphNames {
@@ -197,9 +205,85 @@ export class HashgraphNames {
       throw new Error('Failed to mint domain.');
     }
   };
-  transferDomain = async () => {
-    // eslint-disable-next-line no-console
-    console.log(this.operatorId);
+
+  /**
+ * @description Helper function to convert an Uint8Array into an Hedera Transaction type
+ * @param transactionBytes: {Uint8Array} The transaction bytes to be converted
+ */
+  private static bytesToTransaction = (transactionBytes: Uint8Array): Transaction => {
+    const uint8Array = new Uint8Array(transactionBytes);
+    const transaction: Transaction = Transaction.fromBytes(uint8Array);
+    return transaction;
+  };
+
+  /**
+ * @description Executes an HTS TransferTransaction
+ * @param ownerSignature: {TransactionSignature} The signature information for the NFT owner
+ * @param receiverSignature: {TransactionSignature} The signature information for the NFT receiver
+ * @param transactionBytes: {Uint8Array} The transaction bytes to be executed
+ * @returns {Promise<number>}
+ */
+  transferDomain = async (
+    ownerSignature: TransactionSignature,
+    receiverSignature: TransactionSignature,
+    transactionBytes: Uint8Array,
+  ): Promise<number> => {
+    try {
+      const transaction: Transaction = HashgraphNames.bytesToTransaction(transactionBytes);
+      transaction
+        .addSignature(ownerSignature.signerPublicKey, ownerSignature.signature)
+        .addSignature(receiverSignature.signerPublicKey, receiverSignature.signature);
+
+      const submitTransaction = await transaction.execute(this.client);
+      const receipt = await submitTransaction.getReceipt(this.client);
+      if (receipt.status._code !== Status.Success._code) {
+        throw new Error('TransferTransaction failed');
+      }
+    } catch (err) {
+      throw new Error('Transfer Domain failed');
+    }
+    return CONFIRMATION_STATUS;
+  };
+
+  /**
+ * @description Signs a Hedera transaction
+ * @param signerKey: {PrivateKey} The private key with which to sign the transaction
+ * @param transactionBytes: {Uint8Array} The bytes for the transaction to be signed
+ * @returns {Promise<Uint8Array>}
+ */
+  static transferTransactionSign = (signerKey: PrivateKey, transactionBytes: Uint8Array): TransactionSignature => {
+    const transaction: Transaction = HashgraphNames.bytesToTransaction(transactionBytes);
+
+    const signature = signerKey.signTransaction(transaction);
+    return { signerPublicKey: signerKey.publicKey, signature };
+  };
+
+  /**
+ * @description Creates a HTS TransferTransaction and returns it as an Uint8Array
+ * @param serial: {number} The serial for the NFT to transfer
+ * @param NFTOwner: {string} The account id of the NFT owner
+ * @param NFTReceiver: {string} The account id of the NFT receiver
+ * @param purchasePrice: {number} The amount in tinyBar for which the NFT is being purchased
+ * @returns {Uint8Array}
+ */
+  transferTransactionCreate = (serial: number, NFTOwner: string, NFTReceiver: string, purchasePrice: number): Uint8Array => {
+    try {
+      const fromIdNFT = AccountId.fromString(NFTOwner);
+      const toIdNFT = AccountId.fromString(NFTReceiver);
+
+      const nodeId = [new AccountId(3)];
+
+      const tokenTransferTx = new TransferTransaction()
+        .addNftTransfer(this.tokenId, serial, fromIdNFT, toIdNFT)
+        .addHbarTransfer(toIdNFT, Hbar.fromTinybars(-1 * purchasePrice))
+        .addHbarTransfer(fromIdNFT, Hbar.fromTinybars(purchasePrice))
+        .setNodeAccountIds(nodeId)
+        .freezeWith(this.client);
+
+      return tokenTransferTx.toBytes();
+    } catch (err) {
+      throw new Error('MultiSig transaction create failed');
+    }
   };
 
   /**

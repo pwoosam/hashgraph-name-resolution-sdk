@@ -1,7 +1,11 @@
-import { AccountId, Client, PrivateKey, TokenId } from '@hashgraph/sdk';
+import { AccountId, Client, PrivateKey, PublicKey, TokenId } from '@hashgraph/sdk';
 interface SerialInfo {
     serial: string;
     node: string;
+}
+interface TransactionSignature {
+    signerPublicKey: PublicKey;
+    signature: Uint8Array;
 }
 export declare class HashgraphNames {
     operatorId: AccountId;
@@ -47,7 +51,35 @@ export declare class HashgraphNames {
    * @returns {Promise<number>}
    */
     mintDomain: (domain: string, ownerId: string) => Promise<number>;
-    transferDomain: () => Promise<void>;
+    /**
+   * @description Helper function to convert an Uint8Array into an Hedera Transaction type
+   * @param transactionBytes: {Uint8Array} The transaction bytes to be converted
+   */
+    private static bytesToTransaction;
+    /**
+   * @description Executes an HTS TransferTransaction
+   * @param ownerSignature: {TransactionSignature} The signature information for the NFT owner
+   * @param receiverSignature: {TransactionSignature} The signature information for the NFT receiver
+   * @param transactionBytes: {Uint8Array} The transaction bytes to be executed
+   * @returns {Promise<number>}
+   */
+    transferDomain: (ownerSignature: TransactionSignature, receiverSignature: TransactionSignature, transactionBytes: Uint8Array) => Promise<number>;
+    /**
+   * @description Signs a Hedera transaction
+   * @param signerKey: {PrivateKey} The private key with which to sign the transaction
+   * @param transactionBytes: {Uint8Array} The bytes for the transaction to be signed
+   * @returns {Promise<Uint8Array>}
+   */
+    static transferTransactionSign: (signerKey: PrivateKey, transactionBytes: Uint8Array) => TransactionSignature;
+    /**
+   * @description Creates a HTS TransferTransaction and returns it as an Uint8Array
+   * @param serial: {number} The serial for the NFT to transfer
+   * @param NFTOwner: {string} The account id of the NFT owner
+   * @param NFTReceiver: {string} The account id of the NFT receiver
+   * @param purchasePrice: {number} The amount in tinyBar for which the NFT is being purchased
+   * @returns {Uint8Array}
+   */
+    transferTransactionCreate: (serial: number, NFTOwner: string, NFTReceiver: string, purchasePrice: number) => Uint8Array;
     /**
      * @description Generate a hash of the provided domain string
      * @param domain: {string} The domain string to hash
