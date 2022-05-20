@@ -260,16 +260,22 @@ export class HashgraphNames {
 
   /**
  * @description Creates a HTS TransferTransaction and returns it as an Uint8Array
- * @param serial: {number} The serial for the NFT to transfer
+ * @param domain: {string} The domain for the NFT to transfer
  * @param NFTOwner: {string} The account id of the NFT owner
  * @param NFTReceiver: {string} The account id of the NFT receiver
  * @param purchasePrice: {number} The amount in tinyBar for which the NFT is being purchased
  * @returns {Uint8Array}
  */
-  transferTransactionCreate = (serial: number, NFTOwner: string, NFTReceiver: string, purchasePrice: number): Uint8Array => {
+  transferTransactionCreate = async (
+    domain: string,
+    NFTOwner: string,
+    NFTReceiver: string,
+    purchasePrice: number,
+  ): Promise<Uint8Array> => {
     try {
       const fromIdNFT = AccountId.fromString(NFTOwner);
       const toIdNFT = AccountId.fromString(NFTReceiver);
+      const { serial } = await this.getNFTSerialString(domain);
 
       const nodeId = [new AccountId(3)];
 

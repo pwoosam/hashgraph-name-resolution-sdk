@@ -73,13 +73,13 @@ export declare class HashgraphNames {
     static transferTransactionSign: (signerKey: string, transactionBytes: Uint8Array) => TransactionSignature;
     /**
    * @description Creates a HTS TransferTransaction and returns it as an Uint8Array
-   * @param serial: {number} The serial for the NFT to transfer
+   * @param domain: {string} The domain for the NFT to transfer
    * @param NFTOwner: {string} The account id of the NFT owner
    * @param NFTReceiver: {string} The account id of the NFT receiver
    * @param purchasePrice: {number} The amount in tinyBar for which the NFT is being purchased
    * @returns {Uint8Array}
    */
-    transferTransactionCreate: (serial: number, NFTOwner: string, NFTReceiver: string, purchasePrice: number) => Uint8Array;
+    transferTransactionCreate: (domain: string, NFTOwner: string, NFTReceiver: string, purchasePrice: number) => Promise<Uint8Array>;
     /**
      * @description Generate a hash of the provided domain string
      * @param domain: {string} The domain string to hash
