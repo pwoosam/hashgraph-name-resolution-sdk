@@ -115,7 +115,7 @@ export class HashgraphNames {
       // const bufferedMetadata = Object.entries(metadata).map((e) => JSON.stringify(e)).map((j) => Buffer.from(j));
       const mintTx = new TokenMintTransaction()
         .setTokenId(this.tokenId)
-        .setMetadata([Buffer.from(metadata)])
+        .setMetadata([Buffer.from(JSON.stringify(metadata))])
         .freezeWith(this.client);
       const mintTxSign = await mintTx.sign(this.supplyKey);
       const mintTxSubmit = await mintTxSign.execute(this.client);
