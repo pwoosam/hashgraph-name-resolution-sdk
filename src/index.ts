@@ -91,7 +91,7 @@ export class HashgraphNames {
       name: domain,
       creator: 'piefi labs',
       // creatorDID: '',
-      description: 'A domain on the Hashgraph naming service',
+      description: 'Hashgraph Naming service domain',
       // image: '[cid or path to NFT\'s image]',
       // type: 'image/jpeg', // TODO: Change this to whatever file type we end up generating for the NFT images
       // files: [],
