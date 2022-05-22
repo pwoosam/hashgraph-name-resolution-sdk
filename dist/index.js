@@ -37,10 +37,10 @@ class HashgraphNames {
        */
         this.mintNFT = async (metadata) => {
             try {
-                const bufferedMetadata = Object.entries(metadata).map((e) => JSON.stringify(e)).map((j) => Buffer.from(j));
+                // const bufferedMetadata = Object.entries(metadata).map((e) => JSON.stringify(e)).map((j) => Buffer.from(j));
                 const mintTx = new sdk_1.TokenMintTransaction()
                     .setTokenId(this.tokenId)
-                    .setMetadata(bufferedMetadata)
+                    .setMetadata([Buffer.from(metadata)])
                     .freezeWith(this.client);
                 const mintTxSign = await mintTx.sign(this.supplyKey);
                 const mintTxSubmit = await mintTxSign.execute(this.client);
@@ -296,14 +296,14 @@ HashgraphNames.generateMetadata = (domain) => {
     const metadata = {
         name: domain,
         creator: 'piefi labs',
-        creatorDID: '',
-        description: 'NFT representation of a domain registered under the Hashgraph Names naming service',
-        image: '[cid or path to NFT\'s image]',
-        type: 'image/jpeg',
-        files: [],
-        format: 'none',
-        properties: [],
-        localization: [],
+        // creatorDID: '',
+        description: 'A domain on the Hashgraph naming service',
+        // image: '[cid or path to NFT\'s image]',
+        // type: 'image/jpeg', // TODO: Change this to whatever file type we end up generating for the NFT images
+        // files: [],
+        // format: 'none',
+        // properties: [],
+        // localization: [],
     };
     return metadata;
 };

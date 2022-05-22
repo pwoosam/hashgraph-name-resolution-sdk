@@ -7,23 +7,10 @@ interface TransactionSignature {
     signerPublicKey: PublicKey;
     signature: Uint8Array;
 }
-interface File {
-    uri: string;
-    type: string;
-    metadata: object;
-    metadata_uri: object;
-}
 interface NFTMetadata {
     name: string;
     creator: string;
-    creatorDID: string;
     description: string;
-    image: string;
-    type: string;
-    files: File[];
-    format: string;
-    properties: object[];
-    localization: object[];
 }
 export declare class HashgraphNames {
     operatorId: AccountId;

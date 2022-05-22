@@ -31,24 +31,24 @@ interface TransactionSignature {
   signature: Uint8Array;
 }
 
-interface File {
-  uri: string;
-  type: string;
-  metadata: object;
-  metadata_uri: object;
-}
+// interface File {
+//   uri: string;
+//   type: string;
+//   metadata: object;
+//   metadata_uri: object;
+// }
 
 interface NFTMetadata {
   name: string;
   creator: string;
-  creatorDID: string;
+  // creatorDID: string;
   description: string;
-  image: string;
-  type: string;
-  files: File[];
-  format: string;
-  properties: object[];
-  localization: object[];
+  // image: string;
+  // type: string;
+  // files: File[];
+  // format: string;
+  // properties: object[];
+  // localization: object[];
 }
 
 export class HashgraphNames {
@@ -90,14 +90,14 @@ export class HashgraphNames {
     const metadata: NFTMetadata = {
       name: domain,
       creator: 'piefi labs',
-      creatorDID: '',
-      description: 'NFT representation of a domain registered under the Hashgraph Names naming service',
-      image: '[cid or path to NFT\'s image]',
-      type: 'image/jpeg', // TODO: Change this to whatever file type we end up generating for the NFT images
-      files: [],
-      format: 'none',
-      properties: [],
-      localization: [],
+      // creatorDID: '',
+      description: 'A domain on the Hashgraph naming service',
+      // image: '[cid or path to NFT\'s image]',
+      // type: 'image/jpeg', // TODO: Change this to whatever file type we end up generating for the NFT images
+      // files: [],
+      // format: 'none',
+      // properties: [],
+      // localization: [],
     };
 
     return metadata;
@@ -112,10 +112,10 @@ export class HashgraphNames {
     metadata: NFTMetadata,
   ): Promise<TransactionReceipt> => {
     try {
-      const bufferedMetadata = Object.entries(metadata).map((e) => JSON.stringify(e)).map((j) => Buffer.from(j));
+      // const bufferedMetadata = Object.entries(metadata).map((e) => JSON.stringify(e)).map((j) => Buffer.from(j));
       const mintTx = new TokenMintTransaction()
         .setTokenId(this.tokenId)
-        .setMetadata(bufferedMetadata)
+        .setMetadata([Buffer.from(metadata)])
         .freezeWith(this.client);
       const mintTxSign = await mintTx.sign(this.supplyKey);
       const mintTxSubmit = await mintTxSign.execute(this.client);
