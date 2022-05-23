@@ -13,23 +13,6 @@ const manager_1 = require("./manager");
 class HashgraphNames {
     constructor(operatorId, operatorKey, supplyKey) {
         this.tokenId = sdk_1.TokenId.fromString('0.0.34853601');
-        // TODO: This function is just for testing, remove it.
-        this.printBalance = async (accountId) => {
-            const balanceCheckTx = await new sdk_1.AccountBalanceQuery()
-                .setAccountId(accountId)
-                .execute(this.client);
-            if (!balanceCheckTx) {
-                throw new Error('AccountBalanceQuery Failed');
-            }
-            let nftBalance = 0;
-            if (balanceCheckTx.tokens) {
-                nftBalance = Number(balanceCheckTx.tokens._map.get(this.tokenId.toString()));
-            }
-            return {
-                nft: nftBalance,
-                hbar: Number(balanceCheckTx.hbars.toTinybars()),
-            };
-        };
         /**
        * @description Simple wrapper around HTS TokenMintTransaction()
        * @param metadata: {Buffer} The metadata to include on the newly minted NFT
@@ -37,7 +20,6 @@ class HashgraphNames {
        */
         this.mintNFT = async (metadata) => {
             try {
-                // const bufferedMetadata = Object.entries(metadata).map((e) => JSON.stringify(e)).map((j) => Buffer.from(j));
                 const mintTx = new sdk_1.TokenMintTransaction()
                     .setTokenId(this.tokenId)
                     .setMetadata([Buffer.from(JSON.stringify(metadata))])

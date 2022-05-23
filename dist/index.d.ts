@@ -19,10 +19,6 @@ export declare class HashgraphNames {
     client: Client;
     tokenId: TokenId;
     constructor(operatorId: string, operatorKey: string, supplyKey: string);
-    printBalance: (accountId: AccountId) => Promise<{
-        nft: number;
-        hbar: number;
-    }>;
     static generateMetadata: (domain: string) => NFTMetadata;
     /**
    * @description Simple wrapper around HTS TokenMintTransaction()

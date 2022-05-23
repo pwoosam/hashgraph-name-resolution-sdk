@@ -1,7 +1,5 @@
 import { ContractId } from '@hashgraph/sdk';
-
-const MANAGER_ID = '0.0.34853598';
-const MANAGER_ABI = '../src/contracts/abi/src_contracts_nsNodes_sol_NSNodeManager.abi';
+import { MANAGER_ID, MANAGER_ABI } from './config/constants.config';
 
 export interface ManagerContract {
   id: ContractId;

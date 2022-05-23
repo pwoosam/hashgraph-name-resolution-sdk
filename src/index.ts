@@ -38,6 +38,7 @@ interface TransactionSignature {
 //   metadata_uri: object;
 // }
 
+// HIP-412 metadata not currently supported by hedera 100 byte metadata limit
 interface NFTMetadata {
   name: string;
   creator: string;
@@ -66,26 +67,6 @@ export class HashgraphNames {
     this.client = Client.forTestnet().setOperator(this.operatorId, this.operatorKey);
   }
 
-  // TODO: This function is just for testing, remove it.
-  printBalance = async (accountId: AccountId) => {
-    const balanceCheckTx = await new AccountBalanceQuery()
-      .setAccountId(accountId)
-      .execute(this.client);
-
-    if (!balanceCheckTx) {
-      throw new Error('AccountBalanceQuery Failed');
-    }
-
-    let nftBalance = 0;
-    if (balanceCheckTx.tokens) {
-      nftBalance = Number(balanceCheckTx.tokens._map.get(this.tokenId.toString()));
-    }
-    return {
-      nft: nftBalance,
-      hbar: Number(balanceCheckTx.hbars.toTinybars()),
-    };
-  };
-
   static generateMetadata = (domain: string): NFTMetadata => {
     const metadata: NFTMetadata = {
       name: domain,
@@ -112,7 +93,6 @@ export class HashgraphNames {
     metadata: NFTMetadata,
   ): Promise<TransactionReceipt> => {
     try {
-      // const bufferedMetadata = Object.entries(metadata).map((e) => JSON.stringify(e)).map((j) => Buffer.from(j));
       const mintTx = new TokenMintTransaction()
         .setTokenId(this.tokenId)
         .setMetadata([Buffer.from(JSON.stringify(metadata))])
