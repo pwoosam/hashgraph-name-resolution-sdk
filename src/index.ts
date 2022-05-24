@@ -16,7 +16,7 @@ import {
   TransferTransaction,
 } from '@hashgraph/sdk';
 import keccak256 from 'keccak256';
-import { CONFIRMATION_STATUS } from './config/constants.config';
+import { CONFIRMATION_STATUS, TOKEN_ID } from './config/constants.config';
 import { logger } from './config/logger.config';
 import { callContractFunc } from './contract.utils';
 import { getManagerInfo, ManagerInfo } from './manager';
@@ -57,7 +57,7 @@ export class HashgraphNames {
   operatorKey: PrivateKey;
   supplyKey: PrivateKey;
   client: Client;
-  tokenId: TokenId = TokenId.fromString('0.0.34853601');
+  tokenId: TokenId = TokenId.fromString(TOKEN_ID);
 
   constructor(operatorId: string, operatorKey: string, supplyKey: string) {
     this.operatorId = AccountId.fromString(operatorId);

@@ -32,8 +32,8 @@ const path = __importStar(require("path"));
 const web3_1 = __importDefault(require("web3"));
 const sdk_1 = require("@hashgraph/sdk");
 const logger_config_1 = require("./config/logger.config");
+const constants_config_1 = require("./config/constants.config");
 const web3 = new web3_1.default();
-const MAX_GAS = 4000000;
 /**
  * @description Decodes the result of a contract's function execution
  * @param functionName the name of the function within the ABI
@@ -73,7 +73,7 @@ exports.encodeFunctionCall = encodeFunctionCall;
  * @param funcParams: {string[]} The parameters of the function to be called
  * @param keys: {PrivateKey[]} (optional) The keys required to sign the transaction
  */
-const callContractFunc = async (contractId, abiPath, funcName, funcParams, client, gas = MAX_GAS, keys = null) => {
+const callContractFunc = async (contractId, abiPath, funcName, funcParams, client, gas = constants_config_1.MAX_GAS, keys = null) => {
     try {
         const tx = new sdk_1.ContractExecuteTransaction()
             .setContractId(contractId)

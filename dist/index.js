@@ -12,7 +12,7 @@ const contract_utils_1 = require("./contract.utils");
 const manager_1 = require("./manager");
 class HashgraphNames {
     constructor(operatorId, operatorKey, supplyKey) {
-        this.tokenId = sdk_1.TokenId.fromString('0.0.34853601');
+        this.tokenId = sdk_1.TokenId.fromString(constants_config_1.TOKEN_ID);
         /**
        * @description Simple wrapper around HTS TokenMintTransaction()
        * @param metadata: {Buffer} The metadata to include on the newly minted NFT

@@ -9,9 +9,9 @@ import {
   Status,
 } from '@hashgraph/sdk';
 import { logger } from './config/logger.config';
+import { MAX_GAS } from './config/constants.config';
 
 const web3 = new Web3();
-const MAX_GAS = 4000000;
 
 /**
  * @description Decodes the result of a contract's function execution
