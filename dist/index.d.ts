@@ -18,7 +18,7 @@ export declare class HashgraphNames {
     supplyKey: PrivateKey;
     client: Client;
     tokenId: TokenId;
-    constructor(operatorId: string, operatorKey: string, supplyKey: string);
+    constructor(operatorId: string, operatorKey: string, supplyKey?: string);
     static generateMetadata: (domain: string) => NFTMetadata;
     /**
    * @description Simple wrapper around HTS TokenMintTransaction()

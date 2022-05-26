@@ -11,7 +11,7 @@ const logger_config_1 = require("./config/logger.config");
 const contract_utils_1 = require("./contract.utils");
 const manager_1 = require("./manager");
 class HashgraphNames {
-    constructor(operatorId, operatorKey, supplyKey) {
+    constructor(operatorId, operatorKey, supplyKey = constants_config_1.NULL_KEY) {
         this.tokenId = sdk_1.TokenId.fromString(constants_config_1.TOKEN_ID);
         /**
        * @description Simple wrapper around HTS TokenMintTransaction()
@@ -108,6 +108,9 @@ class HashgraphNames {
             let domainHash;
             const accountId = sdk_1.AccountId.fromString(ownerId);
             try {
+                if (this.supplyKey.toString() === sdk_1.PrivateKey.fromString(constants_config_1.NULL_KEY).toString()) {
+                    throw new Error('Supply Key is required to mint');
+                }
                 domainHash = HashgraphNames.generateNFTHash(domain);
                 const domainExists = await this.checkDomainExists(domainHash);
                 if (domainExists)

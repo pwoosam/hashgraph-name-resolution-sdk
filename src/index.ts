@@ -16,7 +16,7 @@ import {
   TransferTransaction,
 } from '@hashgraph/sdk';
 import keccak256 from 'keccak256';
-import { CONFIRMATION_STATUS, TOKEN_ID } from './config/constants.config';
+import { CONFIRMATION_STATUS, TOKEN_ID, NULL_KEY } from './config/constants.config';
 import { logger } from './config/logger.config';
 import { callContractFunc } from './contract.utils';
 import { getManagerInfo, ManagerInfo } from './manager';
@@ -59,7 +59,7 @@ export class HashgraphNames {
   client: Client;
   tokenId: TokenId = TokenId.fromString(TOKEN_ID);
 
-  constructor(operatorId: string, operatorKey: string, supplyKey: string) {
+  constructor(operatorId: string, operatorKey: string, supplyKey = NULL_KEY) {
     this.operatorId = AccountId.fromString(operatorId);
     this.operatorKey = PrivateKey.fromString(operatorKey);
     this.supplyKey = PrivateKey.fromString(supplyKey);
@@ -203,6 +203,10 @@ export class HashgraphNames {
     const accountId = AccountId.fromString(ownerId);
 
     try {
+      if (this.supplyKey.toString() === PrivateKey.fromString(NULL_KEY).toString()) {
+        throw new Error('Supply Key is required to mint');
+      }
+
       domainHash = HashgraphNames.generateNFTHash(domain);
 
       const domainExists = await this.checkDomainExists(domainHash);
