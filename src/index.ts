@@ -87,23 +87,41 @@ export class HashgraphNames {
   /**
  * @description Simple wrapper around HTS TokenMintTransaction()
  * @param metadata: {Buffer} The metadata to include on the newly minted NFT
- * @returns {Promise<TransactionReceipt>}
+ * @returns {Promise<number>}
  */
   private mintNFT = async (
+    accountId: AccountId,
     metadata: NFTMetadata,
-  ): Promise<TransactionReceipt> => {
+    domainHash: Buffer,
+  ): Promise<number> => {
     try {
-      const mintTx = new TokenMintTransaction()
-        .setTokenId(this.tokenId)
-        .setMetadata([Buffer.from(JSON.stringify(metadata))])
-        .freezeWith(this.client);
-      const mintTxSign = await mintTx.sign(this.supplyKey);
-      const mintTxSubmit = await mintTxSign.execute(this.client);
-      const mintRx = await mintTxSubmit.getReceipt(this.client);
-      if (mintRx.status._code !== Status.Success._code) {
-        throw new Error('TokenMintTransaction failed');
-      }
-      return mintRx;
+      const managerInfo = getManagerInfo();
+
+      const params = [
+        `0x${accountId.toSolidityAddress().toString()}`,
+        JSON.stringify(metadata),
+        `0x${domainHash.toString('hex')}`,
+      ];
+
+      const mintTx = await callContractFunc(
+        managerInfo.contract.id,
+        managerInfo.abi,
+        'mintTo',
+        params,
+        this.client,
+      );
+      return mintTx;
+      // const mintTx = new TokenMintTransaction()
+      //   .setTokenId(this.tokenId)
+      //   .setMetadata([Buffer.from(JSON.stringify(metadata))])
+      //   .freezeWith(this.client);
+      // const mintTxSign = await mintTx.sign(this.supplyKey);
+      // const mintTxSubmit = await mintTxSign.execute(this.client);
+      // const mintRx = await mintTxSubmit.getReceipt(this.client);
+      // if (mintRx.status._code !== Status.Success._code) {
+      //   throw new Error('TokenMintTransaction failed');
+      // }
+      // return mintRx;
     } catch (err) {
       logger.error(err);
       throw new Error('Failed to mint NFT');
@@ -157,34 +175,34 @@ export class HashgraphNames {
     }
   };
 
-  /**
- * @description Register a domain in the smart contract Registry
- * @param domainHash: {Buffer} The hash of the domain to add to the Registry
- * @param serial: {number} The serial of the NFT to register
- * @returns {Promise<number>}
- */
-  private registerDomain = async (
-    domainHash: Buffer,
-    serial: number,
-  ): Promise<number> => {
-    try {
-    // Get manager contract from env
-      const managerInfo = getManagerInfo();
+  //   /**
+  //  * @description Register a domain in the smart contract Registry
+  //  * @param domainHash: {Buffer} The hash of the domain to add to the Registry
+  //  * @param serial: {number} The serial of the NFT to register
+  //  * @returns {Promise<number>}
+  //  */
+  //   private registerDomain = async (
+  //     domainHash: Buffer,
+  //     serial: number,
+  //   ): Promise<number> => {
+  //     try {
+  //     // Get manager contract from env
+  //       const managerInfo = getManagerInfo();
 
-      // Add if not present
-      await callContractFunc(
-        managerInfo.contract.id,
-        managerInfo.abi,
-        'addRecord',
-        [`0x${domainHash.toString('hex')}`, `${serial}`],
-        this.client,
-      );
-      return CONFIRMATION_STATUS;
-    } catch (err) {
-      logger.error(err);
-      throw new Error('Failed to register Domain');
-    }
-  };
+  //       // Add if not present
+  //       await callContractFunc(
+  //         managerInfo.contract.id,
+  //         managerInfo.abi,
+  //         'addRecord',
+  //         [`0x${domainHash.toString('hex')}`, `${serial}`],
+  //         this.client,
+  //       );
+  //       return CONFIRMATION_STATUS;
+  //     } catch (err) {
+  //       logger.error(err);
+  //       throw new Error('Failed to register Domain');
+  //     }
+  //   };
 
   /**
  * @description Mints a new domain NFT and records it in the registry
@@ -197,7 +215,6 @@ export class HashgraphNames {
     domain: string,
     ownerId: string,
   ): Promise<number> => {
-    let NFTSerial;
     let domainHash;
 
     const accountId = AccountId.fromString(ownerId);
@@ -217,11 +234,8 @@ export class HashgraphNames {
 
       // Mint the NFT
       const metadata = HashgraphNames.generateMetadata(domain);
-      const mintRx = await this.mintNFT(metadata);
-      NFTSerial = Number(mintRx.serials[0]);
-
-      // Register the domain in the Registry
-      await this.registerDomain(domainHash, NFTSerial);
+      const mintResponse = await this.mintNFT(accountId, metadata, domainHash);
+      if (mintResponse !== Status.Success._code) logger.error(`Mint Failed -- mintResponse: ${mintResponse}`);
 
       return CONFIRMATION_STATUS;
     } catch (err) {
