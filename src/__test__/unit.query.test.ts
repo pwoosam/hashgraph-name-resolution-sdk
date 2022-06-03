@@ -6,7 +6,6 @@ import { generateRandDomain } from './utils.test';
 dotenv.config();
 const opId = process.env.OPERATOR_ID;
 const opKey = process.env.OPERATOR_PVKEY;
-const supplyKey = process.env.SUPPLY_PVKEY;
 const aliceId = process.env.ALICE_ID;
 const treasuryId = process.env.TREASURY_ID;
 
@@ -14,15 +13,15 @@ describe('test query function', () => {
   jest.setTimeout(1000 * 20);
 
   it('should be able to query for a domain', async () => {
-    if (!opId || !opKey || !supplyKey || !aliceId || !treasuryId) {
+    if (!opId || !opKey || !aliceId || !treasuryId) {
       fail('This test requires data from the env file');
     }
-    const h = new HashgraphNames(opId, opKey, supplyKey);
+    const h = new HashgraphNames(opId, opKey);
     const domain = generateRandDomain(8);
 
     expect(await h.mintDomain(domain, aliceId)).toEqual(CONFIRMATION_STATUS);
 
     const wallet = await h.getWallet(domain);
-    expect(wallet.toString()).toEqual(treasuryId);
+    expect(wallet.toString()).toEqual(aliceId);
   });
 });

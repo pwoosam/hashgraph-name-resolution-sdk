@@ -15,15 +15,14 @@ interface NFTMetadata {
 export declare class HashgraphNames {
     operatorId: AccountId;
     operatorKey: PrivateKey;
-    supplyKey: PrivateKey;
     client: Client;
     tokenId: TokenId;
-    constructor(operatorId: string, operatorKey: string, supplyKey?: string);
+    constructor(operatorId: string, operatorKey: string);
     static generateMetadata: (domain: string) => NFTMetadata;
     /**
    * @description Simple wrapper around HTS TokenMintTransaction()
    * @param metadata: {Buffer} The metadata to include on the newly minted NFT
-   * @returns {Promise<TransactionReceipt>}
+   * @returns {Promise<number>}
    */
     private mintNFT;
     /**
@@ -38,13 +37,6 @@ export declare class HashgraphNames {
    * @returns {Promise<boolean>}
    */
     private checkDomainExists;
-    /**
-   * @description Register a domain in the smart contract Registry
-   * @param domainHash: {Buffer} The hash of the domain to add to the Registry
-   * @param serial: {number} The serial of the NFT to register
-   * @returns {Promise<number>}
-   */
-    private registerDomain;
     /**
    * @description Mints a new domain NFT and records it in the registry
    * @throws {@link InternalServerError}

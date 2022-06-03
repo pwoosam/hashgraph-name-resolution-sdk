@@ -8,15 +8,13 @@ import {
   PublicKey,
   Status,
   TokenId,
-  TokenMintTransaction,
   TokenNftInfo,
   TokenNftInfoQuery,
   Transaction,
-  TransactionReceipt,
   TransferTransaction,
 } from '@hashgraph/sdk';
 import keccak256 from 'keccak256';
-import { CONFIRMATION_STATUS, TOKEN_ID, NULL_KEY } from './config/constants.config';
+import { CONFIRMATION_STATUS, TOKEN_ID } from './config/constants.config';
 import { logger } from './config/logger.config';
 import { callContractFunc } from './contract.utils';
 import { getManagerInfo, ManagerInfo } from './manager';
@@ -55,14 +53,12 @@ interface NFTMetadata {
 export class HashgraphNames {
   operatorId: AccountId;
   operatorKey: PrivateKey;
-  supplyKey: PrivateKey;
   client: Client;
   tokenId: TokenId = TokenId.fromString(TOKEN_ID);
 
-  constructor(operatorId: string, operatorKey: string, supplyKey = NULL_KEY) {
+  constructor(operatorId: string, operatorKey: string) {
     this.operatorId = AccountId.fromString(operatorId);
     this.operatorKey = PrivateKey.fromString(operatorKey);
-    this.supplyKey = PrivateKey.fromString(supplyKey);
 
     this.client = Client.forTestnet().setOperator(this.operatorId, this.operatorKey);
   }
@@ -110,7 +106,7 @@ export class HashgraphNames {
         params,
         this.client,
       );
-      return mintTx;
+      return mintTx[0];
       // const mintTx = new TokenMintTransaction()
       //   .setTokenId(this.tokenId)
       //   .setMetadata([Buffer.from(JSON.stringify(metadata))])
@@ -220,10 +216,6 @@ export class HashgraphNames {
     const accountId = AccountId.fromString(ownerId);
 
     try {
-      if (this.supplyKey.toString() === PrivateKey.fromString(NULL_KEY).toString()) {
-        throw new Error('Supply Key is required to mint');
-      }
-
       domainHash = HashgraphNames.generateNFTHash(domain);
 
       const domainExists = await this.checkDomainExists(domainHash);
@@ -235,7 +227,7 @@ export class HashgraphNames {
       // Mint the NFT
       const metadata = HashgraphNames.generateMetadata(domain);
       const mintResponse = await this.mintNFT(accountId, metadata, domainHash);
-      if (mintResponse !== Status.Success._code) logger.error(`Mint Failed -- mintResponse: ${mintResponse}`);
+      if (Number(mintResponse) !== Number(Status.Success._code)) throw new Error('Failed to mint domain');
 
       return CONFIRMATION_STATUS;
     } catch (err) {

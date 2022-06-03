@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { Client, ContractId, PrivateKey } from '@hashgraph/sdk';
 /**
  * @description Decodes the result of a contract's function execution
