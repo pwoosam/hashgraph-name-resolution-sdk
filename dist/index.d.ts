@@ -1,16 +1,8 @@
 import { AccountId, Client, PrivateKey, PublicKey, TokenId } from '@hashgraph/sdk';
-interface SerialInfo {
-    serial: string;
-    node: string;
-}
+import { NameHash, NFTMetadata, SLDInfo, SubdomainInfo } from './config/constants.config';
 interface TransactionSignature {
     signerPublicKey: PublicKey;
     signature: Uint8Array;
-}
-interface NFTMetadata {
-    name: string;
-    creator: string;
-    description: string;
 }
 export declare class HashgraphNames {
     operatorId: AccountId;
@@ -20,31 +12,48 @@ export declare class HashgraphNames {
     constructor(operatorId: string, operatorKey: string);
     static generateMetadata: (domain: string) => NFTMetadata;
     /**
-   * @description Simple wrapper around HTS TokenMintTransaction()
-   * @param metadata: {Buffer} The metadata to include on the newly minted NFT
-   * @returns {Promise<number>}
+   * @description Generate a NameHash of the provided domain string
+   * @param domain: {string} The domain string to hash
+   * @returns {Buffer}
    */
-    private mintNFT;
+    static generateNameHash: (domain: string) => NameHash;
     /**
-   * @description Check if a token is associated with a specific account
-   * @param accountId: {AccountId} The account to check if the domain NFT is associated
-   * @returns {Promise<boolean>}
+   * @description Query the registry for the SLDNode responsible for a domain
+   * @param nameHash: {NameHash} The NameHash of the domain to query
+   * @param tldNodeId: {ContractId} TLDNode contract id
+   * @returns {Promise<ContractId>}
    */
-    private isTokenAssociatedToAccount;
+    private getSLDNode;
     /**
-   * @description Check if a domain exists in the registry
-   * @param domainHash: {Buffer} The hash of the domain to check
-   * @returns {Promise<boolean>}
+   * @description Takes a nameHash and returns the SLD that contains it
+   * @param nameHash: {Buffer} The nameHash of the domain to be queried
+   * @returns {Promise<ContractId>}
    */
-    private checkDomainExists;
+    private resolveSLDNode;
     /**
-   * @description Mints a new domain NFT and records it in the registry
-   * @throws {@link InternalServerError}
-   * @param domain {string} The domain to mint
-   * @param ownerId {string} The owner of the domain to mint
-   * @returns {Promise<number>}
+   * @description Resolves a Second Level Domain to the wallet address of the domain's owner
+   * @param domain: {string} The domain to query
+   * @returns {Promise<AccountId>}
    */
-    mintDomain: (domain: string, ownerId: string) => Promise<number>;
+    resolveSLD: (domain: string) => Promise<AccountId>;
+    /**
+   * @description Get the SLDInfo for a given domain
+   * @param domain: {string} The domain to query
+   * @returns {Promise<SLDInfo>}
+   */
+    getSLDInfo: (domain: string) => Promise<SLDInfo>;
+    /**
+   * @description Get the SubdomainInfo for a given domain
+   * @param domain: {string} The domain to query
+   * @returns {Promise<SubdomainInfo>}
+   */
+    getSubdomainInfo: (domain: string) => Promise<SubdomainInfo>;
+    /**
+   * @description Get all subdomains for a given domain
+   * @param domain: {string} The domain to query
+   * @returns {Promise<string[]>}
+   */
+    getSLDSubdomains: (domain: string) => Promise<string[]>;
     /**
    * @description Helper function to convert an Uint8Array into an Hedera Transaction type
    * @param transactionBytes: {Uint8Array} The transaction bytes to be converted
@@ -75,43 +84,20 @@ export declare class HashgraphNames {
    */
     transferTransactionCreate: (domain: string, NFTOwner: string, NFTReceiver: string, purchasePrice: number) => Promise<Uint8Array>;
     /**
-     * @description Generate a hash of the provided domain string
-     * @param domain: {string} The domain string to hash
-     * @returns {Buffer}
-     */
-    static generateNFTHash: (domain: string) => Buffer;
-    /**
-     * @description Simple wrapper around callContractFunc for the getSerial smart contract function
-     * @param domainHash: {Buffer} The hash of the domain to query
-     * @param begin: {number} The begin index in the array of nodes of the manager
-     * @param end: {number} The end index in the array of nodes of the manager
-     * @returns {Promise<SerialInfo>}
-     */
-    private callGetSerial;
-    /**
-   * @description Query the registry for the owner of a domain
-   * @param domainHash: {Buffer} The hash of the domain to query
-   * @returns {Promise<SerialInfo>}
-   */
-    private getDomainSerial;
-    /**
    * @description Simple wrapper around HTS TokenNftInfoQuery()
    * @param serial: {number} The serial of the NFT to query
    * @returns {Promise<TokenNftInfo>}
    */
     private getTokenNFTInfo;
-    /**
-   * @description Wrapper around getDomainSerial() that takes a string of the domain
-   * @param domain: {string} The domain to query
-   * @returns {Promise<SerialInfo>}
-   */
-    getNFTSerialString: (domain: string) => Promise<SerialInfo>;
-    /**
-   * @description Gets the serial for the domain, then queries for the AccountId who owns
-   * that domain.
-   * @param domain: {string} The domain to query
-   * @returns {Promise<AccountId>}
-   */
-    getWallet: (domain: string) => Promise<AccountId>;
 }
 export {};
+/**
+//  * @description Simple wrapper around HTS TokenMintTransaction()
+//  * @param metadata: {Buffer} The metadata to include on the newly minted NFT
+//  * @returns {Promise<number>}
+//  */
+/**
+//  * @description Query the registry for the owner of a domain
+//  * @param domainHash: {Buffer} The hash of the domain to query
+//  * @returns {Promise<SerialInfo>}
+//  */
