@@ -1,5 +1,5 @@
-import { Client, ContractFunctionParameters, ContractId, PrivateKey } from '@hashgraph/sdk';
-import { ContractInfo, NameHash, SLDInfo, SubdomainInfo } from './config/constants.config';
+import { Client, ContractFunctionParameters, ContractId, PrivateKey, TokenId } from '@hashgraph/sdk';
+import { ContractInfo, NameHash, NFTData, SLDInfo, SubdomainInfo } from './config/constants.config';
 /**
  * @description Decodes the result of a contract's function execution
  * @param functionName the name of the function within the ABI
@@ -104,3 +104,10 @@ export declare const callGetSubdomainInfo: (client: Client, subdomainNodeId: Con
  * @returns {Promise<string[]>}
  */
 export declare const callDumpNames: (client: Client, subdomainNodeId: ContractId) => Promise<string[]>;
+/**
+ * @description Issues a Rest API request to get all NFTs in a wallet
+ * @param client: {Client} The client to use for the transaction
+ * @param tokenId: {TokenId} Id of token of interest for the query
+ * @returns {Promise<string[]>}
+ */
+export declare const queryNFTsFromRestAPI: (client: Client, tokenId: TokenId) => Promise<NFTData[]>;

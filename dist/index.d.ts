@@ -1,5 +1,5 @@
 import { AccountId, Client, PrivateKey, PublicKey, TokenId } from '@hashgraph/sdk';
-import { NameHash, NFTMetadata, SLDInfo, SubdomainInfo } from './config/constants.config';
+import { NameHash, NFTData, NFTMetadata, SLDInfo, SubdomainInfo } from './config/constants.config';
 interface TransactionSignature {
     signerPublicKey: PublicKey;
     signature: Uint8Array;
@@ -54,6 +54,7 @@ export declare class HashgraphNames {
    * @returns {Promise<string[]>}
    */
     getSLDSubdomains: (domain: string) => Promise<string[]>;
+    getAllSLDsInWallet: () => Promise<NFTData[]>;
     /**
    * @description Helper function to convert an Uint8Array into an Hedera Transaction type
    * @param transactionBytes: {Uint8Array} The transaction bytes to be converted

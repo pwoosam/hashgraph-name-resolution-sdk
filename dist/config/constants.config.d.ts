@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { AccountId, ContractId } from '@hashgraph/sdk';
+import { AccountId, ContractId, TokenId } from '@hashgraph/sdk';
 export declare const CONFIRMATION_STATUS = 1;
 export declare const EXIT_STATUS = -1;
 export declare const HEDERA_SUCCESS = 22;
@@ -10,6 +10,8 @@ export declare const TLD_NODE_ABI = "../src/contracts/abi/src_contracts_TLDNode_
 export declare const SLD_NODE_ABI = "../src/contracts/abi/src_contracts_SLDNode_sol_SLDNode.abi";
 export declare const SUBDOMAIN_NODE_ABI = "../src/contracts/abi/src_contracts_SubdomainNode_sol_SubdomainNode.abi";
 export declare const MAX_GAS = 4000000;
+declare type Network = 'testnet' | 'mainnet';
+export declare const NETWORK: Network;
 export declare const NULL_CONTRACT_ADDRESS: string;
 export declare const NULL_CONTRACT_ID: ContractId;
 export declare const NULL_ACCOUNT_ID: AccountId;
@@ -59,3 +61,10 @@ export interface SubdomainInfo {
     addresses: Addresses;
     textRecord: TextRecord;
 }
+export interface NFTData {
+    accountId: AccountId;
+    metadata: string;
+    serialNumber: number;
+    tokenId: TokenId;
+}
+export {};

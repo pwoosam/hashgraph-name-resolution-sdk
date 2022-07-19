@@ -17,6 +17,7 @@ import keccak256 from 'keccak256';
 import {
   CONFIRMATION_STATUS,
   NameHash,
+  NFTData,
   NFTMetadata,
   NULL_CONTRACT_ID,
   SLDInfo,
@@ -32,6 +33,7 @@ import {
   callGetSLDNode,
   callGetSubdomainInfo,
   callGetTLD,
+  queryNFTsFromRestAPI,
 } from './contract.utils';
 
 interface TransactionSignature {
@@ -246,6 +248,15 @@ export class HashgraphNames {
       const sldNodeInfo = await callGetSLDInfo(this.client, sldNodeId, nameHash);
       const subdomainNodeId = ContractId.fromSolidityAddress(sldNodeInfo.subdomainNode);
       return await callDumpNames(this.client, subdomainNodeId);
+    } catch (err) {
+      logger.error(err);
+      throw new Error('Failed to get SLD Info');
+    }
+  };
+
+  getAllSLDsInWallet = async (): Promise<NFTData[]> => { // : Promise<TokenId[]> => {
+    try {
+      return await queryNFTsFromRestAPI(this.client, this.tokenId);
     } catch (err) {
       logger.error(err);
       throw new Error('Failed to get SLD Info');

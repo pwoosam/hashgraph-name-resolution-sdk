@@ -1,4 +1,4 @@
-import { AccountId, ContractId } from '@hashgraph/sdk';
+import { AccountId, ContractId, TokenId } from '@hashgraph/sdk';
 
 export const CONFIRMATION_STATUS = 1;
 export const EXIT_STATUS = -1;
@@ -13,6 +13,10 @@ export const SLD_NODE_ABI = '../src/contracts/abi/src_contracts_SLDNode_sol_SLDN
 export const SUBDOMAIN_NODE_ABI = '../src/contracts/abi/src_contracts_SubdomainNode_sol_SubdomainNode.abi';
 
 export const MAX_GAS = 4000000;
+
+type Network = 'testnet' | 'mainnet';
+export const NETWORK: Network = 'testnet';
+// export const NETWORK = 'mainnet';
 
 export const NULL_CONTRACT_ADDRESS = ContractId.fromString('0.0.0').toSolidityAddress();
 export const NULL_CONTRACT_ID = ContractId.fromString('0.0.0');
@@ -79,4 +83,11 @@ export interface SubdomainInfo {
   //   index: number,
   addresses: Addresses,
   textRecord: TextRecord
+}
+
+export interface NFTData {
+  accountId: AccountId,
+  metadata: string,
+  serialNumber: number,
+  tokenId: TokenId
 }

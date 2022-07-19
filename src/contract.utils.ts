@@ -10,12 +10,16 @@ import {
   Hbar,
   PrivateKey,
   Status,
+  TokenId,
 } from '@hashgraph/sdk';
+import axios from 'axios';
 import { logger } from './config/logger.config';
 import {
   ContractInfo,
   MAX_GAS,
   NameHash,
+  NETWORK,
+  NFTData,
   SLDInfo,
   SLD_NODE_ABI,
   SubdomainInfo,
@@ -403,51 +407,50 @@ export const callDumpNames = async (
   }
 };
 
-// /**
-//  * @description Simple wrapper around callContractFunc for the dumpNames smart contract function
-//  * @param client: {Client} The client to use for the transaction
-//  * @param subdomainNodeId: {ContractId} The contract id to query for the SubdomainInfo
-//  * @returns {Promise<string[]>}
-//  */
-// export const callGetSubdomainOwner = async (
-//   client: Client,
-//   subdomainNodeId: ContractId,
-//   nameHash: NameHash,
-// ): Promise<string[]> => {
-//   try {
-//     const subdomainNodeAbi = getSubdomainNodeABI();
+/**
+ * @description Issues a Rest API request to get all NFTs in a wallet
+ * @param client: {Client} The client to use for the transaction
+ * @param tokenId: {TokenId} Id of token of interest for the query
+ * @returns {Promise<string[]>}
+ */
+export const queryNFTsFromRestAPI = async (
+  client: Client,
+  tokenId: TokenId,
+): Promise<NFTData[]> => {
+  try {
+    const accountId = client.operatorAccountId?.toString();
 
-//     const params = new ContractFunctionParameters()
-//       .addBytes32(nameHash.subdomainHash);
+    let url;
 
-//     const result = await queryContractFunc(
-//       client,
-//       subdomainNodeId,
-//       subdomainNodeAbi,
-//       'getSubdomainOwner',
-//       params,
-//     );
+    switch (NETWORK) {
+      case 'testnet':
+        url = `https://testnet.mirrornode.hedera.com/api/v1/accounts/${accountId}/nfts/?token.id=${tokenId}`;
+        break;
+      case 'mainnet':
+        url = `https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/${accountId}/nfts/?token.id=${tokenId}`;
+        break;
+      default:
+        throw new Error('Invalid Network');
+    }
 
-//     return result[0];
-//   } catch (err) {
-//     logger.error(err);
-//     throw new Error('Failed to call getDomainInfo');
-//   }
-// };
+    const config = {
+      method: 'get',
+      url,
+    };
 
-// =========================================
+    const res = await axios(config);
 
-// getSubdomainOwner = async (domain: string): Promise<string[]> => {
-//   try {
-//     const nameHash = HashgraphNames.generateNameHash(domain);
-//     const sldNodeId = await this.resolveSLDNode(nameHash);
-//     const sldNodeInfo = await callGetSLDInfo(this.client, sldNodeId, nameHash);
-//     const subdomainNodeId = ContractId.fromSolidityAddress(sldNodeInfo.subdomainNode);
-//     return await callGetSubdomainOwner(this.client, subdomainNodeId, nameHash);
-//   } catch (err) {
-//     logger.error(err);
-//     throw new Error('Failed to get SLD Info');
-//   }
-// };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const nfts = res.data.nfts.map((t:any) => ({
+      accountId: t.account_id,
+      metadata: Buffer.from(t.metadata, 'base64').toString(),
+      serialNumber: t.serial_number,
+      tokenId: t.token_id,
+    }));
 
-// ============================================
+    return (nfts as NFTData[]);
+  } catch (err) {
+    logger.error(err);
+    throw new Error('Failed to get All SLDs');
+  }
+};

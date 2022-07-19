@@ -138,6 +138,15 @@ class HashgraphNames {
                 throw new Error('Failed to get SLD Info');
             }
         };
+        this.getAllSLDsInWallet = async () => {
+            try {
+                return await (0, contract_utils_1.queryNFTsFromRestAPI)(this.client, this.tokenId);
+            }
+            catch (err) {
+                logger_config_1.logger.error(err);
+                throw new Error('Failed to get SLD Info');
+            }
+        };
         /**
        * @description Executes an HTS TransferTransaction
        * @param ownerSignature: {TransactionSignature} The signature information for the NFT owner

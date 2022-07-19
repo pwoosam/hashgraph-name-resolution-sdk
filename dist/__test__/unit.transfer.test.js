@@ -13,9 +13,7 @@ const aliceId = process.env.ALICE_ID;
 const aliceKey = process.env.ALICE_PVKEY;
 const bobId = process.env.BOB_ID;
 const bobKey = process.env.BOB_PVKEY;
-// TODO: After the backend is deployed, rework this test to mint a new domain, then call the endpoint to
-// get the domain into alice's account. Then test transferring it into bob's account.
-// As of now, this test requires there to be a domain by the name of "test1.hbar" minted and owned by
+// As of now, this test requires there to be a domain by the name of "sld1.hbar" minted and owned by
 // either the alice or bob test account.
 describe('test transfer function', () => {
     jest.setTimeout(1000 * 40);
@@ -24,8 +22,8 @@ describe('test transfer function', () => {
             fail('This test requires data from the env file');
         }
         const h = new index_1.HashgraphNames(opId, opKey);
-        const domain = 'test1.hbar';
-        const currOwner = (await h.getWallet(domain)).toString();
+        const domain = 'sld1.hbar';
+        const currOwner = (await h.resolveSLD(domain)).toString();
         expect(currOwner).toEqual(expect.anything());
         expect([aliceId, bobId]).toContain(currOwner);
         let newOwner;
@@ -46,7 +44,7 @@ describe('test transfer function', () => {
         const newOwnerSig = index_1.HashgraphNames.transferTransactionSign(newOwnerKey, transferTransaction);
         const result = await h.transferDomain(currOwnerSig, newOwnerSig, transferTransaction);
         expect(result).toEqual(constants_config_1.CONFIRMATION_STATUS);
-        const actualNewOwner = await h.getWallet(domain);
+        const actualNewOwner = await h.resolveSLD(domain);
         expect(actualNewOwner.toString()).toEqual(newOwner);
     });
 });

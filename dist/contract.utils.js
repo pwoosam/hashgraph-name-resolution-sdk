@@ -26,11 +26,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.callDumpNames = exports.callGetSubdomainInfo = exports.callGetSLDInfo = exports.callGetSerial = exports.callGetSLDNode = exports.callGetTLD = exports.callGetNumNodes = exports.getSubdomainNodeABI = exports.getSLDNodeABI = exports.getTLDNodeAbi = exports.getTLDManagerInfo = exports.queryContractFunc = exports.callContractFunc = exports.decodeFunctionResult = void 0;
+exports.queryNFTsFromRestAPI = exports.callDumpNames = exports.callGetSubdomainInfo = exports.callGetSLDInfo = exports.callGetSerial = exports.callGetSLDNode = exports.callGetTLD = exports.callGetNumNodes = exports.getSubdomainNodeABI = exports.getSLDNodeABI = exports.getTLDNodeAbi = exports.getTLDManagerInfo = exports.queryContractFunc = exports.callContractFunc = exports.decodeFunctionResult = void 0;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const web3_1 = __importDefault(require("web3"));
 const sdk_1 = require("@hashgraph/sdk");
+const axios_1 = __importDefault(require("axios"));
 const logger_config_1 = require("./config/logger.config");
 const constants_config_1 = require("./config/constants.config");
 const web3 = new web3_1.default();
@@ -291,45 +292,44 @@ const callDumpNames = async (client, subdomainNodeId) => {
     }
 };
 exports.callDumpNames = callDumpNames;
-// /**
-//  * @description Simple wrapper around callContractFunc for the dumpNames smart contract function
-//  * @param client: {Client} The client to use for the transaction
-//  * @param subdomainNodeId: {ContractId} The contract id to query for the SubdomainInfo
-//  * @returns {Promise<string[]>}
-//  */
-// export const callGetSubdomainOwner = async (
-//   client: Client,
-//   subdomainNodeId: ContractId,
-//   nameHash: NameHash,
-// ): Promise<string[]> => {
-//   try {
-//     const subdomainNodeAbi = getSubdomainNodeABI();
-//     const params = new ContractFunctionParameters()
-//       .addBytes32(nameHash.subdomainHash);
-//     const result = await queryContractFunc(
-//       client,
-//       subdomainNodeId,
-//       subdomainNodeAbi,
-//       'getSubdomainOwner',
-//       params,
-//     );
-//     return result[0];
-//   } catch (err) {
-//     logger.error(err);
-//     throw new Error('Failed to call getDomainInfo');
-//   }
-// };
-// =========================================
-// getSubdomainOwner = async (domain: string): Promise<string[]> => {
-//   try {
-//     const nameHash = HashgraphNames.generateNameHash(domain);
-//     const sldNodeId = await this.resolveSLDNode(nameHash);
-//     const sldNodeInfo = await callGetSLDInfo(this.client, sldNodeId, nameHash);
-//     const subdomainNodeId = ContractId.fromSolidityAddress(sldNodeInfo.subdomainNode);
-//     return await callGetSubdomainOwner(this.client, subdomainNodeId, nameHash);
-//   } catch (err) {
-//     logger.error(err);
-//     throw new Error('Failed to get SLD Info');
-//   }
-// };
-// ============================================
+/**
+ * @description Issues a Rest API request to get all NFTs in a wallet
+ * @param client: {Client} The client to use for the transaction
+ * @param tokenId: {TokenId} Id of token of interest for the query
+ * @returns {Promise<string[]>}
+ */
+const queryNFTsFromRestAPI = async (client, tokenId) => {
+    var _a;
+    try {
+        const accountId = (_a = client.operatorAccountId) === null || _a === void 0 ? void 0 : _a.toString();
+        let url;
+        switch (constants_config_1.NETWORK) {
+            case 'testnet':
+                url = `https://testnet.mirrornode.hedera.com/api/v1/accounts/${accountId}/nfts/?token.id=${tokenId}`;
+                break;
+            case 'mainnet':
+                url = `https://mainnet-public.mirrornode.hedera.com/api/v1/accounts/${accountId}/nfts/?token.id=${tokenId}`;
+                break;
+            default:
+                throw new Error('Invalid Network');
+        }
+        const config = {
+            method: 'get',
+            url,
+        };
+        const res = await (0, axios_1.default)(config);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const nfts = res.data.nfts.map((t) => ({
+            accountId: t.account_id,
+            metadata: Buffer.from(t.metadata, 'base64').toString(),
+            serialNumber: t.serial_number,
+            tokenId: t.token_id,
+        }));
+        return nfts;
+    }
+    catch (err) {
+        logger_config_1.logger.error(err);
+        throw new Error('Failed to get All SLDs');
+    }
+};
+exports.queryNFTsFromRestAPI = queryNFTsFromRestAPI;

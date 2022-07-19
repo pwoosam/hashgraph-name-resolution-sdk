@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NULL_ACCOUNT_ID = exports.NULL_CONTRACT_ID = exports.NULL_CONTRACT_ADDRESS = exports.MAX_GAS = exports.SUBDOMAIN_NODE_ABI = exports.SLD_NODE_ABI = exports.TLD_NODE_ABI = exports.TLD_MANAGER_ABI = exports.TLD_MANAGER_ID = exports.TOKEN_ID = exports.HEDERA_SUCCESS = exports.EXIT_STATUS = exports.CONFIRMATION_STATUS = void 0;
+exports.NULL_ACCOUNT_ID = exports.NULL_CONTRACT_ID = exports.NULL_CONTRACT_ADDRESS = exports.NETWORK = exports.MAX_GAS = exports.SUBDOMAIN_NODE_ABI = exports.SLD_NODE_ABI = exports.TLD_NODE_ABI = exports.TLD_MANAGER_ABI = exports.TLD_MANAGER_ID = exports.TOKEN_ID = exports.HEDERA_SUCCESS = exports.EXIT_STATUS = exports.CONFIRMATION_STATUS = void 0;
 const sdk_1 = require("@hashgraph/sdk");
 exports.CONFIRMATION_STATUS = 1;
 exports.EXIT_STATUS = -1;
@@ -12,6 +12,8 @@ exports.TLD_NODE_ABI = '../src/contracts/abi/src_contracts_TLDNode_sol_TLDNode.a
 exports.SLD_NODE_ABI = '../src/contracts/abi/src_contracts_SLDNode_sol_SLDNode.abi';
 exports.SUBDOMAIN_NODE_ABI = '../src/contracts/abi/src_contracts_SubdomainNode_sol_SubdomainNode.abi';
 exports.MAX_GAS = 4000000;
+exports.NETWORK = 'testnet';
+// export const NETWORK = 'mainnet';
 exports.NULL_CONTRACT_ADDRESS = sdk_1.ContractId.fromString('0.0.0').toSolidityAddress();
 exports.NULL_CONTRACT_ID = sdk_1.ContractId.fromString('0.0.0');
 exports.NULL_ACCOUNT_ID = sdk_1.AccountId.fromString('0.0.0');
