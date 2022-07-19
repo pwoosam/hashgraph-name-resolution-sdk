@@ -12,9 +12,9 @@ const opId = process.env.OPERATOR_ID;
 const opKey = process.env.OPERATOR_PVKEY;
 const aliceId = process.env.ALICE_ID;
 const treasuryId = process.env.TREASURY_ID;
-describe('test query function', () => {
+describe('test querySLDInfo function', () => {
     jest.setTimeout(1000 * 20);
-    it('should be able to query for a domain', async () => {
+    it('should be able to query for SLDInfo of a domain', async () => {
         if (!opId || !opKey || !aliceId || !treasuryId) {
             fail('This test requires data from the env file');
         }
