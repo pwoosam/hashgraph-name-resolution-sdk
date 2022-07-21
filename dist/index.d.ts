@@ -92,13 +92,3 @@ export declare class HashgraphNames {
     private getTokenNFTInfo;
 }
 export {};
-/**
-//  * @description Simple wrapper around HTS TokenMintTransaction()
-//  * @param metadata: {Buffer} The metadata to include on the newly minted NFT
-//  * @returns {Promise<number>}
-//  */
-/**
-//  * @description Query the registry for the owner of a domain
-//  * @param domainHash: {Buffer} The hash of the domain to query
-//  * @returns {Promise<SerialInfo>}
-//  */
