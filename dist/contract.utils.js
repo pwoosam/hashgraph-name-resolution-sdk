@@ -82,9 +82,6 @@ exports.decodeFunctionResult = decodeFunctionResult;
  */
 const callContractFunc = async (client, contractId, contractType, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS, keys = null) => {
     try {
-        // TODO: Remove
-        // eslint-disable-next-line no-console
-        console.log(`Hitting Contract: ${contractId}::${funcName}`);
         const tx = new sdk_1.ContractExecuteTransaction()
             .setContractId(contractId)
             .setFunction(funcName, funcParams)
@@ -119,9 +116,6 @@ exports.callContractFunc = callContractFunc;
  */
 const queryContractFunc = async (client, contractId, contractType, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS) => {
     try {
-        // TODO: Remove
-        // eslint-disable-next-line no-console
-        console.log(`Hitting Contract: ${contractId}::${funcName}`);
         const tx = new sdk_1.ContractCallQuery()
             .setContractId(contractId)
             .setFunction(funcName, funcParams)

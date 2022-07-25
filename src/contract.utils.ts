@@ -90,10 +90,6 @@ export const callContractFunc = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> => {
   try {
-    // TODO: Remove
-    // eslint-disable-next-line no-console
-    console.log(`Hitting Contract: ${contractId}::${funcName}`);
-
     const tx = new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction(funcName, funcParams)
@@ -144,10 +140,6 @@ export const queryContractFunc = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> => {
   try {
-    // TODO: Remove
-    // eslint-disable-next-line no-console
-    console.log(`Hitting Contract: ${contractId}::${funcName}`);
-
     const tx = new ContractCallQuery()
       .setContractId(contractId)
       .setFunction(funcName, funcParams)
