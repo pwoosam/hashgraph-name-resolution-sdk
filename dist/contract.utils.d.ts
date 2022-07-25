@@ -1,15 +1,15 @@
 import { Client, ContractFunctionParameters, ContractId, PrivateKey, TokenId } from '@hashgraph/sdk';
-import { ContractInfo, NameHash, NFTData, SLDInfo, SubdomainInfo } from './config/constants.config';
+import { ContractType, NameHash, NFTData, SLDInfo, SubdomainInfo } from './config/constants.config';
 /**
  * @description Decodes the result of a contract's function execution
  * @param functionName the name of the function within the ABI
  * @param resultAsBytes a byte array containing the execution result
  */
-export declare const decodeFunctionResult: (functionName: string, abiPath: string, resultAsBytes: Uint8Array) => any;
+export declare const decodeFunctionResult: (functionName: string, contractType: ContractType, resultAsBytes: Uint8Array) => any;
 /**
  * @description Wrapper around Hedera SDK ContractExecuteTransaction
  * @param contractId: {ContractId} The contract on which to to call a function
- * @param abiPath: {string} The path to the abi file of the contract
+ * @param nodeType: {NodeType} The type contract
  * @param funcName: {string} The function name of which to call on the contract
  * @param funcParams: {ContractFunctionParameters} The parameters of the function to be called
  * @param client: {Client} The client to use for the transaction
@@ -17,7 +17,7 @@ export declare const decodeFunctionResult: (functionName: string, abiPath: strin
  * @param keys: {PrivateKey[]} (optional) The keys required to sign the transaction
  * @returns {Promise<any>}
  */
-export declare const callContractFunc: (client: Client, contractId: ContractId, abiPath: string, funcName: string, funcParams?: ContractFunctionParameters, gas?: number, keys?: PrivateKey[] | null) => Promise<any>;
+export declare const callContractFunc: (client: Client, contractId: ContractId, contractType: ContractType, funcName: string, funcParams?: ContractFunctionParameters, gas?: number, keys?: PrivateKey[] | null) => Promise<any>;
 /**
  * @description Wrapper around Hedera SDK ContractCallQuery
  * @param contractId: {ContractId} The contract on which to to call a function
@@ -28,27 +28,12 @@ export declare const callContractFunc: (client: Client, contractId: ContractId, 
  * @param gas: {number} (optional) The max gas to use for the call
  * @returns {Promise<any>}
  */
-export declare const queryContractFunc: (client: Client, contractId: ContractId, abiPath: string, funcName: string, funcParams?: ContractFunctionParameters, gas?: number) => Promise<any>;
+export declare const queryContractFunc: (client: Client, contractId: ContractId, contractType: ContractType, funcName: string, funcParams?: ContractFunctionParameters, gas?: number) => Promise<any>;
 /**
- * @description Retrieves information about the tld manager
+ * @description Retrieves the tld manager id
  * @returns {ContractInfo}
  */
-export declare const getTLDManagerInfo: () => ContractInfo;
-/**
- * @description Retrieves abi path for TLDNode
- * @returns {string}
- */
-export declare const getTLDNodeAbi: () => string;
-/**
-  * @description Retrieves abi path for SLDNode
-  * @returns {string}
-  */
-export declare const getSLDNodeABI: () => string;
-/**
-  * @description Retrieves abi path for SubdomainNode
-  * @returns {string}
-  */
-export declare const getSubdomainNodeABI: () => string;
+export declare const getTLDManagerId: () => ContractId;
 /**
  * @description Simple wrapper around callContractFunc for the getNumNodes smart contract function
  * @param client: {Client} The client to use for the transaction
