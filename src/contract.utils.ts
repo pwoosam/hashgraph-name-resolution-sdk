@@ -28,6 +28,11 @@ import {
   TLD_MANAGER_ID,
   TLD_NODE_ABI,
 } from './config/constants.config';
+import * as SLDNode from './contracts/abi/src_contracts_SLDNode_sol_SLDNode.json';
+import * as SubdomainNode from './contracts/abi/src_contracts_SubdomainNode_sol_SubdomainNode.json';
+import * as TLDManager from './contracts/abi/src_contracts_TLDManager_sol_TLDManager.json';
+import * as TLDNode from './contracts/abi/src_contracts_TLDNode_sol_TLDNode.json';
+
 
 const web3 = new Web3();
 
