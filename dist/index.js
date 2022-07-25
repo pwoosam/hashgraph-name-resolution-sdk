@@ -232,7 +232,7 @@ HashgraphNames.generateMetadata = (domain) => {
         // creatorDID: '',
         // description: 'Hashgraph Naming service domain',
         // image: '[cid or path to NFT\'s image]',
-        // type: 'image/jpeg', // TODO: Change this to whatever file type we end up generating for the NFT images
+        // type: 'image/jpeg',
         // files: [],
         // format: 'none',
         // properties: [],

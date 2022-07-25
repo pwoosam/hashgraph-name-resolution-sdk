@@ -22,6 +22,14 @@ export const NULL_CONTRACT_ADDRESS = ContractId.fromString('0.0.0').toSolidityAd
 export const NULL_CONTRACT_ID = ContractId.fromString('0.0.0');
 export const NULL_ACCOUNT_ID = AccountId.fromString('0.0.0');
 
+export enum ContractTypes {
+  SLDNode,
+  TLDManager,
+  TLDNode,
+  SubdomainNode,
+}
+export type ContractType = ContractTypes.SLDNode | ContractTypes.SubdomainNode | ContractTypes.TLDManager | ContractTypes.TLDNode;
+
 export interface ContractInfo {
   id: ContractId;
   abi: string;

@@ -26,24 +26,43 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.queryNFTsFromRestAPI = exports.callDumpNames = exports.callGetSubdomainInfo = exports.callGetSLDInfo = exports.callGetSerial = exports.callGetSLDNode = exports.callGetTLD = exports.callGetNumNodes = exports.getSubdomainNodeABI = exports.getSLDNodeABI = exports.getTLDNodeAbi = exports.getTLDManagerInfo = exports.queryContractFunc = exports.callContractFunc = exports.decodeFunctionResult = void 0;
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const web3_1 = __importDefault(require("web3"));
+exports.queryNFTsFromRestAPI = exports.callDumpNames = exports.callGetSubdomainInfo = exports.callGetSLDInfo = exports.callGetSerial = exports.callGetSLDNode = exports.callGetTLD = exports.callGetNumNodes = exports.getTLDManagerId = exports.queryContractFunc = exports.callContractFunc = exports.decodeFunctionResult = void 0;
 const sdk_1 = require("@hashgraph/sdk");
 const axios_1 = __importDefault(require("axios"));
-const logger_config_1 = require("./config/logger.config");
+const web3_1 = __importDefault(require("web3"));
 const constants_config_1 = require("./config/constants.config");
+const logger_config_1 = require("./config/logger.config");
+const SLDNode = __importStar(require("./contracts/abi/src_contracts_SLDNode_sol_SLDNode.json"));
+const SubdomainNode = __importStar(require("./contracts/abi/src_contracts_SubdomainNode_sol_SubdomainNode.json"));
+const TLDManager = __importStar(require("./contracts/abi/src_contracts_TLDManager_sol_TLDManager.json"));
+const TLDNode = __importStar(require("./contracts/abi/src_contracts_TLDNode_sol_TLDNode.json"));
 const web3 = new web3_1.default();
 /**
  * @description Decodes the result of a contract's function execution
  * @param functionName the name of the function within the ABI
  * @param resultAsBytes a byte array containing the execution result
  */
-const decodeFunctionResult = (functionName, abiPath, resultAsBytes) => {
-    const abi = JSON.parse(fs.readFileSync(path.resolve(__dirname, abiPath), 'utf8'));
+const decodeFunctionResult = (functionName, contractType, resultAsBytes) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const functionAbi = abi.find((func) => func.name === functionName);
+    let abi;
+    switch (contractType) {
+        case constants_config_1.ContractTypes.SLDNode:
+            abi = SLDNode;
+            break;
+        case constants_config_1.ContractTypes.SubdomainNode:
+            abi = SubdomainNode;
+            break;
+        case constants_config_1.ContractTypes.TLDManager:
+            abi = TLDManager;
+            break;
+        case constants_config_1.ContractTypes.TLDNode:
+            abi = TLDNode;
+            break;
+        default:
+            throw new Error('Invalid Node Type');
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const functionAbi = abi.default.find((func) => func.name === functionName);
     const functionParameters = functionAbi.outputs;
     const resultHex = '0x'.concat(Buffer.from(resultAsBytes).toString('hex'));
     const result = web3.eth.abi.decodeParameters(functionParameters, resultHex);
@@ -53,7 +72,7 @@ exports.decodeFunctionResult = decodeFunctionResult;
 /**
  * @description Wrapper around Hedera SDK ContractExecuteTransaction
  * @param contractId: {ContractId} The contract on which to to call a function
- * @param abiPath: {string} The path to the abi file of the contract
+ * @param nodeType: {NodeType} The type contract
  * @param funcName: {string} The function name of which to call on the contract
  * @param funcParams: {ContractFunctionParameters} The parameters of the function to be called
  * @param client: {Client} The client to use for the transaction
@@ -61,11 +80,8 @@ exports.decodeFunctionResult = decodeFunctionResult;
  * @param keys: {PrivateKey[]} (optional) The keys required to sign the transaction
  * @returns {Promise<any>}
  */
-const callContractFunc = async (client, contractId, abiPath, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS, keys = null) => {
+const callContractFunc = async (client, contractId, contractType, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS, keys = null) => {
     try {
-        // TODO: Remove
-        // eslint-disable-next-line no-console
-        console.log(`Hitting Contract: ${contractId}::${funcName}`);
         const tx = new sdk_1.ContractExecuteTransaction()
             .setContractId(contractId)
             .setFunction(funcName, funcParams)
@@ -80,7 +96,7 @@ const callContractFunc = async (client, contractId, abiPath, funcName, funcParam
         if (!record || !record.contractFunctionResult || record.receipt.status._code !== sdk_1.Status.Success._code) {
             throw new Error('ContractExecuteTransaction failed');
         }
-        return (0, exports.decodeFunctionResult)(funcName, abiPath, record.contractFunctionResult.bytes);
+        return (0, exports.decodeFunctionResult)(funcName, contractType, record.contractFunctionResult.bytes);
     }
     catch (err) {
         logger_config_1.logger.error(err);
@@ -98,11 +114,8 @@ exports.callContractFunc = callContractFunc;
  * @param gas: {number} (optional) The max gas to use for the call
  * @returns {Promise<any>}
  */
-const queryContractFunc = async (client, contractId, abiPath, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS) => {
+const queryContractFunc = async (client, contractId, contractType, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS) => {
     try {
-        // TODO: Remove
-        // eslint-disable-next-line no-console
-        console.log(`Hitting Contract: ${contractId}::${funcName}`);
         const tx = new sdk_1.ContractCallQuery()
             .setContractId(contractId)
             .setFunction(funcName, funcParams)
@@ -112,7 +125,7 @@ const queryContractFunc = async (client, contractId, abiPath, funcName, funcPara
         if (!response || !response.bytes) {
             throw new Error('ContractCallQuery failed');
         }
-        return (0, exports.decodeFunctionResult)(funcName, abiPath, response.bytes);
+        return (0, exports.decodeFunctionResult)(funcName, contractType, response.bytes);
     }
     catch (err) {
         logger_config_1.logger.error(err);
@@ -121,33 +134,11 @@ const queryContractFunc = async (client, contractId, abiPath, funcName, funcPara
 };
 exports.queryContractFunc = queryContractFunc;
 /**
- * @description Retrieves information about the tld manager
+ * @description Retrieves the tld manager id
  * @returns {ContractInfo}
  */
-const getTLDManagerInfo = () => {
-    const id = sdk_1.ContractId.fromString(constants_config_1.TLD_MANAGER_ID);
-    const abi = constants_config_1.TLD_MANAGER_ABI;
-    return { id, abi };
-};
-exports.getTLDManagerInfo = getTLDManagerInfo;
-/**
- * @description Retrieves abi path for TLDNode
- * @returns {string}
- */
-const getTLDNodeAbi = () => constants_config_1.TLD_NODE_ABI;
-exports.getTLDNodeAbi = getTLDNodeAbi;
-/**
-  * @description Retrieves abi path for SLDNode
-  * @returns {string}
-  */
-const getSLDNodeABI = () => constants_config_1.SLD_NODE_ABI;
-exports.getSLDNodeABI = getSLDNodeABI;
-/**
-  * @description Retrieves abi path for SubdomainNode
-  * @returns {string}
-  */
-const getSubdomainNodeABI = () => constants_config_1.SUBDOMAIN_NODE_ABI;
-exports.getSubdomainNodeABI = getSubdomainNodeABI;
+const getTLDManagerId = () => sdk_1.ContractId.fromString(constants_config_1.TLD_MANAGER_ID);
+exports.getTLDManagerId = getTLDManagerId;
 /**
  * @description Simple wrapper around callContractFunc for the getNumNodes smart contract function
  * @param client: {Client} The client to use for the transaction
@@ -156,8 +147,7 @@ exports.getSubdomainNodeABI = getSubdomainNodeABI;
  */
 const callGetNumNodes = async (client, tldNodeId) => {
     try {
-        const tldNodeAbi = (0, exports.getTLDNodeAbi)();
-        const result = (await (0, exports.queryContractFunc)(client, tldNodeId, tldNodeAbi, 'getNumNodes'));
+        const result = (await (0, exports.queryContractFunc)(client, tldNodeId, constants_config_1.ContractTypes.TLDNode, 'getNumNodes'));
         return Number(result[0]);
     }
     catch (err) {
@@ -174,10 +164,10 @@ exports.callGetNumNodes = callGetNumNodes;
  */
 const callGetTLD = async (client, tldHash) => {
     try {
-        const tldManagerInfo = (0, exports.getTLDManagerInfo)();
+        const tldManagerId = (0, exports.getTLDManagerId)();
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(tldHash);
-        const result = await (0, exports.queryContractFunc)(client, tldManagerInfo.id, tldManagerInfo.abi, 'getTLD', params);
+        const result = await (0, exports.queryContractFunc)(client, tldManagerId, constants_config_1.ContractTypes.TLDManager, 'getTLD', params);
         return sdk_1.ContractId.fromSolidityAddress(result[0]);
     }
     catch (err) {
@@ -197,12 +187,11 @@ exports.callGetTLD = callGetTLD;
  */
 const callGetSLDNode = async (client, nameHash, tldNodeId, begin = 0, end = 0) => {
     try {
-        const tldNodeAbi = (0, exports.getTLDNodeAbi)();
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(nameHash.sldHash)
             .addUint256(begin)
             .addUint256(end);
-        const result = await (0, exports.queryContractFunc)(client, tldNodeId, tldNodeAbi, 'getSLDNode', params);
+        const result = await (0, exports.queryContractFunc)(client, tldNodeId, constants_config_1.ContractTypes.TLDNode, 'getSLDNode', params);
         return sdk_1.ContractId.fromSolidityAddress(result[0]);
     }
     catch (err) {
@@ -220,10 +209,9 @@ exports.callGetSLDNode = callGetSLDNode;
  */
 const callGetSerial = async (client, sldNodeId, nameHash) => {
     try {
-        const sldNodeAbi = (0, exports.getSLDNodeABI)();
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(nameHash.sldHash);
-        const result = await (0, exports.queryContractFunc)(client, sldNodeId, sldNodeAbi, 'getSerial', params);
+        const result = await (0, exports.queryContractFunc)(client, sldNodeId, constants_config_1.ContractTypes.SLDNode, 'getSerial', params);
         return Number(result[0]);
     }
     catch (err) {
@@ -241,10 +229,9 @@ exports.callGetSerial = callGetSerial;
  */
 const callGetSLDInfo = async (client, sldNodeId, nameHash) => {
     try {
-        const sldNodeAbi = (0, exports.getSLDNodeABI)();
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(nameHash.sldHash);
-        const result = await (0, exports.queryContractFunc)(client, sldNodeId, sldNodeAbi, 'getSLDInfo', params);
+        const result = await (0, exports.queryContractFunc)(client, sldNodeId, constants_config_1.ContractTypes.SLDNode, 'getSLDInfo', params);
         return result[0];
     }
     catch (err) {
@@ -262,10 +249,9 @@ exports.callGetSLDInfo = callGetSLDInfo;
  */
 const callGetSubdomainInfo = async (client, subdomainNodeId, nameHash) => {
     try {
-        const subdomainNodeAbi = (0, exports.getSubdomainNodeABI)();
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(nameHash.subdomainHash);
-        const result = await (0, exports.queryContractFunc)(client, subdomainNodeId, subdomainNodeAbi, 'getSubdomainInfo', params);
+        const result = await (0, exports.queryContractFunc)(client, subdomainNodeId, constants_config_1.ContractTypes.SubdomainNode, 'getSubdomainInfo', params);
         return result[0];
     }
     catch (err) {
@@ -282,8 +268,7 @@ exports.callGetSubdomainInfo = callGetSubdomainInfo;
  */
 const callDumpNames = async (client, subdomainNodeId) => {
     try {
-        const subdomainNodeAbi = (0, exports.getSubdomainNodeABI)();
-        const result = await (0, exports.queryContractFunc)(client, subdomainNodeId, subdomainNodeAbi, 'dumpNames');
+        const result = await (0, exports.queryContractFunc)(client, subdomainNodeId, constants_config_1.ContractTypes.SubdomainNode, 'dumpNames');
         return result[0];
     }
     catch (err) {

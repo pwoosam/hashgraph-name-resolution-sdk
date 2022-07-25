@@ -1,6 +1,3 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import Web3 from 'web3';
 import {
   Client,
   ContractCallQuery,
@@ -13,26 +10,23 @@ import {
   TokenId,
 } from '@hashgraph/sdk';
 import axios from 'axios';
-import { logger } from './config/logger.config';
+import Web3 from 'web3';
 import {
-  ContractInfo,
+  ContractType,
+  ContractTypes,
   MAX_GAS,
   NameHash,
   NETWORK,
   NFTData,
   SLDInfo,
-  SLD_NODE_ABI,
   SubdomainInfo,
-  SUBDOMAIN_NODE_ABI,
-  TLD_MANAGER_ABI,
   TLD_MANAGER_ID,
-  TLD_NODE_ABI,
 } from './config/constants.config';
+import { logger } from './config/logger.config';
 import * as SLDNode from './contracts/abi/src_contracts_SLDNode_sol_SLDNode.json';
 import * as SubdomainNode from './contracts/abi/src_contracts_SubdomainNode_sol_SubdomainNode.json';
 import * as TLDManager from './contracts/abi/src_contracts_TLDManager_sol_TLDManager.json';
 import * as TLDNode from './contracts/abi/src_contracts_TLDNode_sol_TLDNode.json';
-
 
 const web3 = new Web3();
 
@@ -43,14 +37,31 @@ const web3 = new Web3();
  */
 export const decodeFunctionResult = (
   functionName: string,
-  abiPath: string,
+  contractType: ContractType,
   resultAsBytes: Uint8Array,
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any => {
-  const abi = JSON.parse(fs.readFileSync(path.resolve(__dirname, abiPath), 'utf8'));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let abi: any;
+  switch (contractType) {
+    case ContractTypes.SLDNode:
+      abi = SLDNode;
+      break;
+    case ContractTypes.SubdomainNode:
+      abi = SubdomainNode;
+      break;
+    case ContractTypes.TLDManager:
+      abi = TLDManager;
+      break;
+    case ContractTypes.TLDNode:
+      abi = TLDNode;
+      break;
+    default:
+      throw new Error('Invalid Node Type');
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const functionAbi = abi.find((func: any) => func.name === functionName);
+  const functionAbi = abi.default.find((func: any) => func.name === functionName);
   const functionParameters = functionAbi.outputs;
   const resultHex = '0x'.concat(Buffer.from(resultAsBytes).toString('hex'));
   const result = web3.eth.abi.decodeParameters(functionParameters, resultHex);
@@ -60,7 +71,7 @@ export const decodeFunctionResult = (
 /**
  * @description Wrapper around Hedera SDK ContractExecuteTransaction
  * @param contractId: {ContractId} The contract on which to to call a function
- * @param abiPath: {string} The path to the abi file of the contract
+ * @param nodeType: {NodeType} The type contract
  * @param funcName: {string} The function name of which to call on the contract
  * @param funcParams: {ContractFunctionParameters} The parameters of the function to be called
  * @param client: {Client} The client to use for the transaction
@@ -71,7 +82,7 @@ export const decodeFunctionResult = (
 export const callContractFunc = async (
   client: Client,
   contractId: ContractId,
-  abiPath: string,
+  contractType: ContractType,
   funcName: string,
   funcParams: ContractFunctionParameters = new ContractFunctionParameters(),
   gas = MAX_GAS,
@@ -79,10 +90,6 @@ export const callContractFunc = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> => {
   try {
-    // TODO: Remove
-    // eslint-disable-next-line no-console
-    console.log(`Hitting Contract: ${contractId}::${funcName}`);
-
     const tx = new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction(funcName, funcParams)
@@ -104,7 +111,7 @@ export const callContractFunc = async (
 
     return decodeFunctionResult(
       funcName,
-      abiPath,
+      contractType,
       record.contractFunctionResult.bytes,
     );
   } catch (err) {
@@ -126,17 +133,13 @@ export const callContractFunc = async (
 export const queryContractFunc = async (
   client: Client,
   contractId: ContractId,
-  abiPath: string,
+  contractType: ContractType,
   funcName: string,
   funcParams: ContractFunctionParameters = new ContractFunctionParameters(),
   gas = MAX_GAS,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> => {
   try {
-    // TODO: Remove
-    // eslint-disable-next-line no-console
-    console.log(`Hitting Contract: ${contractId}::${funcName}`);
-
     const tx = new ContractCallQuery()
       .setContractId(contractId)
       .setFunction(funcName, funcParams)
@@ -152,7 +155,7 @@ export const queryContractFunc = async (
 
     return decodeFunctionResult(
       funcName,
-      abiPath,
+      contractType,
       response.bytes,
     );
   } catch (err) {
@@ -162,32 +165,10 @@ export const queryContractFunc = async (
 };
 
 /**
- * @description Retrieves information about the tld manager
+ * @description Retrieves the tld manager id
  * @returns {ContractInfo}
  */
-export const getTLDManagerInfo = (): ContractInfo => {
-  const id: ContractId = ContractId.fromString(TLD_MANAGER_ID);
-  const abi: string = TLD_MANAGER_ABI;
-  return { id, abi };
-};
-
-/**
- * @description Retrieves abi path for TLDNode
- * @returns {string}
- */
-export const getTLDNodeAbi = (): string => TLD_NODE_ABI;
-
-/**
-  * @description Retrieves abi path for SLDNode
-  * @returns {string}
-  */
-export const getSLDNodeABI = (): string => SLD_NODE_ABI;
-
-/**
-  * @description Retrieves abi path for SubdomainNode
-  * @returns {string}
-  */
-export const getSubdomainNodeABI = (): string => SUBDOMAIN_NODE_ABI;
+export const getTLDManagerId = (): ContractId => ContractId.fromString(TLD_MANAGER_ID);
 
 /**
  * @description Simple wrapper around callContractFunc for the getNumNodes smart contract function
@@ -200,13 +181,11 @@ export const callGetNumNodes = async (
   tldNodeId: ContractId,
 ): Promise<number> => {
   try {
-    const tldNodeAbi = getTLDNodeAbi();
-
     const result = (
       await queryContractFunc(
         client,
         tldNodeId,
-        tldNodeAbi,
+        ContractTypes.TLDNode,
         'getNumNodes',
       )
     );
@@ -229,15 +208,15 @@ export const callGetTLD = async (
   tldHash: Buffer,
 ): Promise<ContractId> => {
   try {
-    const tldManagerInfo = getTLDManagerInfo();
+    const tldManagerId = getTLDManagerId();
 
     const params = new ContractFunctionParameters()
       .addBytes32(tldHash);
 
     const result = await queryContractFunc(
       client,
-      tldManagerInfo.id,
-      tldManagerInfo.abi,
+      tldManagerId,
+      ContractTypes.TLDManager,
       'getTLD',
       params,
     );
@@ -266,7 +245,6 @@ export const callGetSLDNode = async (
   end = 0,
 ): Promise<ContractId> => {
   try {
-    const tldNodeAbi = getTLDNodeAbi();
     const params = new ContractFunctionParameters()
       .addBytes32(nameHash.sldHash)
       .addUint256(begin)
@@ -275,7 +253,7 @@ export const callGetSLDNode = async (
     const result = await queryContractFunc(
       client,
       tldNodeId,
-      tldNodeAbi,
+      ContractTypes.TLDNode,
       'getSLDNode',
       params,
     );
@@ -300,15 +278,13 @@ export const callGetSerial = async (
   nameHash: NameHash,
 ): Promise<number> => {
   try {
-    const sldNodeAbi = getSLDNodeABI();
-
     const params = new ContractFunctionParameters()
       .addBytes32(nameHash.sldHash);
 
     const result = await queryContractFunc(
       client,
       sldNodeId,
-      sldNodeAbi,
+      ContractTypes.SLDNode,
       'getSerial',
       params,
     );
@@ -332,15 +308,13 @@ export const callGetSLDInfo = async (
   nameHash: NameHash,
 ): Promise<SLDInfo> => {
   try {
-    const sldNodeAbi = getSLDNodeABI();
-
     const params = new ContractFunctionParameters()
       .addBytes32(nameHash.sldHash);
 
     const result = await queryContractFunc(
       client,
       sldNodeId,
-      sldNodeAbi,
+      ContractTypes.SLDNode,
       'getSLDInfo',
       params,
     );
@@ -365,15 +339,13 @@ export const callGetSubdomainInfo = async (
   nameHash: NameHash,
 ): Promise<SubdomainInfo> => {
   try {
-    const subdomainNodeAbi = getSubdomainNodeABI();
-
     const params = new ContractFunctionParameters()
       .addBytes32(nameHash.subdomainHash);
 
     const result = await queryContractFunc(
       client,
       subdomainNodeId,
-      subdomainNodeAbi,
+      ContractTypes.SubdomainNode,
       'getSubdomainInfo',
       params,
     );
@@ -396,12 +368,10 @@ export const callDumpNames = async (
   subdomainNodeId: ContractId,
 ): Promise<string[]> => {
   try {
-    const subdomainNodeAbi = getSubdomainNodeABI();
-
     const result = await queryContractFunc(
       client,
       subdomainNodeId,
-      subdomainNodeAbi,
+      ContractTypes.SubdomainNode,
       'dumpNames',
     );
 

@@ -15,6 +15,13 @@ export declare const NETWORK: Network;
 export declare const NULL_CONTRACT_ADDRESS: string;
 export declare const NULL_CONTRACT_ID: ContractId;
 export declare const NULL_ACCOUNT_ID: AccountId;
+export declare enum ContractTypes {
+    SLDNode = 0,
+    TLDManager = 1,
+    TLDNode = 2,
+    SubdomainNode = 3
+}
+export declare type ContractType = ContractTypes.SLDNode | ContractTypes.SubdomainNode | ContractTypes.TLDManager | ContractTypes.TLDNode;
 export interface ContractInfo {
     id: ContractId;
     abi: string;
