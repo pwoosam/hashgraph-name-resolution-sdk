@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { Client, ContractFunctionParameters, ContractId, PrivateKey, TokenId } from '@hashgraph/sdk';
 import { ContractType, NameHash, NFTData, SLDInfo, SubdomainInfo } from './config/constants.config';
 /**

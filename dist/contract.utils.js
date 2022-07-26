@@ -31,7 +31,6 @@ const sdk_1 = require("@hashgraph/sdk");
 const axios_1 = __importDefault(require("axios"));
 const web3_1 = __importDefault(require("web3"));
 const constants_config_1 = require("./config/constants.config");
-const logger_config_1 = require("./config/logger.config");
 const SLDNode = __importStar(require("./contracts/abi/src_contracts_SLDNode_sol_SLDNode.json"));
 const SubdomainNode = __importStar(require("./contracts/abi/src_contracts_SubdomainNode_sol_SubdomainNode.json"));
 const TLDManager = __importStar(require("./contracts/abi/src_contracts_TLDManager_sol_TLDManager.json"));
@@ -99,7 +98,6 @@ const callContractFunc = async (client, contractId, contractType, funcName, func
         return (0, exports.decodeFunctionResult)(funcName, contractType, record.contractFunctionResult.bytes);
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         return new Error('callContractFunc failed');
     }
 };
@@ -128,7 +126,6 @@ const queryContractFunc = async (client, contractId, contractType, funcName, fun
         return (0, exports.decodeFunctionResult)(funcName, contractType, response.bytes);
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         return new Error('queryContractFunc failed');
     }
 };
@@ -151,7 +148,6 @@ const callGetNumNodes = async (client, tldNodeId) => {
         return Number(result[0]);
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         throw new Error('Failed to call getNumNodes');
     }
 };
@@ -171,7 +167,6 @@ const callGetTLD = async (client, tldHash) => {
         return sdk_1.ContractId.fromSolidityAddress(result[0]);
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         throw new Error('Failed to call getTLD');
     }
 };
@@ -195,7 +190,6 @@ const callGetSLDNode = async (client, nameHash, tldNodeId, begin = 0, end = 0) =
         return sdk_1.ContractId.fromSolidityAddress(result[0]);
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         throw new Error('Failed to call getSLDNode');
     }
 };
@@ -215,7 +209,6 @@ const callGetSerial = async (client, sldNodeId, nameHash) => {
         return Number(result[0]);
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         throw new Error('Failed to call getSerial');
     }
 };
@@ -235,7 +228,6 @@ const callGetSLDInfo = async (client, sldNodeId, nameHash) => {
         return result[0];
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         throw new Error('Failed to call getDomainInfo');
     }
 };
@@ -255,7 +247,6 @@ const callGetSubdomainInfo = async (client, subdomainNodeId, nameHash) => {
         return result[0];
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         throw new Error('Failed to call getDomainInfo');
     }
 };
@@ -272,7 +263,6 @@ const callDumpNames = async (client, subdomainNodeId) => {
         return result[0];
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         throw new Error('Failed to call getDomainInfo');
     }
 };
@@ -313,7 +303,6 @@ const queryNFTsFromRestAPI = async (client, tokenId) => {
         return nfts;
     }
     catch (err) {
-        logger_config_1.logger.error(err);
         throw new Error('Failed to get All SLDs');
     }
 };

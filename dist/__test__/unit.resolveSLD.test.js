@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
 const index_1 = require("../index");
-const logger_config_1 = require("../config/logger.config");
 const utils_test_1 = require("./utils.test");
 dotenv_1.default.config();
 const opId = process.env.OPERATOR_ID;
@@ -24,7 +23,6 @@ describe('test resolveSLD function', () => {
         expect(wallet.toString()).toEqual(aliceId.toString());
     });
     it('should not be able to resolve a domain that does not exists', async () => {
-        jest.spyOn(logger_config_1.logger, 'error').mockImplementation(jest.fn());
         if (!opId || !opKey || !aliceId) {
             fail('This test requires data from the env file');
         }

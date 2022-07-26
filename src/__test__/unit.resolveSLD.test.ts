@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import { HashgraphNames } from '../index';
-import { logger } from '../config/logger.config';
 import { generateRandDomain } from './utils.test';
 
 dotenv.config();
@@ -23,7 +22,6 @@ describe('test resolveSLD function', () => {
   });
 
   it('should not be able to resolve a domain that does not exists', async () => {
-    jest.spyOn(logger, 'error').mockImplementation(jest.fn());
     if (!opId || !opKey || !aliceId) {
       fail('This test requires data from the env file');
     }

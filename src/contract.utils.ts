@@ -22,7 +22,6 @@ import {
   SubdomainInfo,
   TLD_MANAGER_ID,
 } from './config/constants.config';
-import { logger } from './config/logger.config';
 import * as SLDNode from './contracts/abi/src_contracts_SLDNode_sol_SLDNode.json';
 import * as SubdomainNode from './contracts/abi/src_contracts_SubdomainNode_sol_SubdomainNode.json';
 import * as TLDManager from './contracts/abi/src_contracts_TLDManager_sol_TLDManager.json';
@@ -115,7 +114,6 @@ export const callContractFunc = async (
       record.contractFunctionResult.bytes,
     );
   } catch (err) {
-    logger.error(err);
     return new Error('callContractFunc failed');
   }
 };
@@ -159,7 +157,6 @@ export const queryContractFunc = async (
       response.bytes,
     );
   } catch (err) {
-    logger.error(err);
     return new Error('queryContractFunc failed');
   }
 };
@@ -192,7 +189,6 @@ export const callGetNumNodes = async (
 
     return Number(result[0]);
   } catch (err) {
-    logger.error(err);
     throw new Error('Failed to call getNumNodes');
   }
 };
@@ -223,7 +219,6 @@ export const callGetTLD = async (
 
     return ContractId.fromSolidityAddress(result[0]);
   } catch (err) {
-    logger.error(err);
     throw new Error('Failed to call getTLD');
   }
 };
@@ -260,7 +255,6 @@ export const callGetSLDNode = async (
 
     return ContractId.fromSolidityAddress(result[0]);
   } catch (err) {
-    logger.error(err);
     throw new Error('Failed to call getSLDNode');
   }
 };
@@ -290,7 +284,6 @@ export const callGetSerial = async (
     );
     return Number(result[0]);
   } catch (err) {
-    logger.error(err);
     throw new Error('Failed to call getSerial');
   }
 };
@@ -321,7 +314,6 @@ export const callGetSLDInfo = async (
 
     return result[0] as SLDInfo;
   } catch (err) {
-    logger.error(err);
     throw new Error('Failed to call getDomainInfo');
   }
 };
@@ -352,7 +344,6 @@ export const callGetSubdomainInfo = async (
 
     return result[0] as SubdomainInfo;
   } catch (err) {
-    logger.error(err);
     throw new Error('Failed to call getDomainInfo');
   }
 };
@@ -377,7 +368,6 @@ export const callDumpNames = async (
 
     return result[0];
   } catch (err) {
-    logger.error(err);
     throw new Error('Failed to call getDomainInfo');
   }
 };
@@ -425,7 +415,6 @@ export const queryNFTsFromRestAPI = async (
 
     return (nfts as NFTData[]);
   } catch (err) {
-    logger.error(err);
     throw new Error('Failed to get All SLDs');
   }
 };

@@ -24,7 +24,6 @@ import {
   SubdomainInfo,
   TOKEN_ID,
 } from './config/constants.config';
-import { logger } from './config/logger.config';
 import {
   callDumpNames,
   callGetNumNodes,
@@ -154,7 +153,6 @@ export class HashgraphNames {
       }
       return decodedResult;
     } catch (err) {
-      logger.error(err);
       throw new Error('Failed to get SLDNode');
     }
   };
@@ -178,7 +176,6 @@ export class HashgraphNames {
 
       return sldNodeId;
     } catch (err) {
-      logger.error(err);
       throw new Error('Failed to resolve SLD');
     }
   };
@@ -197,7 +194,6 @@ export class HashgraphNames {
 
       return accountId;
     } catch (err) {
-      logger.error(err);
       throw new Error('Failed to get wallet');
     }
   };
@@ -213,7 +209,6 @@ export class HashgraphNames {
       const sldNodeId = await this.resolveSLDNode(nameHash);
       return await callGetSLDInfo(this.client, sldNodeId, nameHash);
     } catch (err) {
-      logger.error(err);
       throw new Error('Failed to get SLD Info');
     }
   };
@@ -231,7 +226,6 @@ export class HashgraphNames {
       const subdomainNodeId = ContractId.fromSolidityAddress(sldNodeInfo.subdomainNode);
       return await callGetSubdomainInfo(this.client, subdomainNodeId, nameHash);
     } catch (err) {
-      logger.error(err);
       throw new Error('Failed to get SLD Info');
     }
   };
@@ -249,7 +243,6 @@ export class HashgraphNames {
       const subdomainNodeId = ContractId.fromSolidityAddress(sldNodeInfo.subdomainNode);
       return await callDumpNames(this.client, subdomainNodeId);
     } catch (err) {
-      logger.error(err);
       throw new Error('Failed to get SLD Info');
     }
   };
@@ -258,7 +251,6 @@ export class HashgraphNames {
     try {
       return await queryNFTsFromRestAPI(this.client, this.tokenId);
     } catch (err) {
-      logger.error(err);
       throw new Error('Failed to get SLD Info');
     }
   };
@@ -366,7 +358,6 @@ export class HashgraphNames {
         .execute(this.client);
       return nftInfo[0];
     } catch (err) {
-      logger.error(err);
       throw new Error('Get NFT info failed');
     }
   };
