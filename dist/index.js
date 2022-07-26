@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,21 +26,21 @@ class HashgraphNames {
        * @param tldNodeId: {ContractId} TLDNode contract id
        * @returns {Promise<ContractId>}
        */
-        this.getSLDNode = async (nameHash, tldNodeId = constants_config_1.NULL_CONTRACT_ID) => {
+        this.getSLDNode = (nameHash, tldNodeId = constants_config_1.NULL_CONTRACT_ID) => __awaiter(this, void 0, void 0, function* () {
             try {
                 let decodedResult = constants_config_1.NULL_CONTRACT_ID;
                 let tldId = tldNodeId;
                 if (tldId === constants_config_1.NULL_CONTRACT_ID) {
-                    tldId = await (0, contract_utils_1.callGetTLD)(this.client, nameHash.tldHash);
+                    tldId = yield (0, contract_utils_1.callGetTLD)(this.client, nameHash.tldHash);
                 }
-                const numNodes = await (0, contract_utils_1.callGetNumNodes)(this.client, tldId);
+                const numNodes = yield (0, contract_utils_1.callGetNumNodes)(this.client, tldId);
                 const chunkSize = 100;
                 let begin = 0;
                 let end = 0;
                 for (let i = 0; end < numNodes; i += 1) {
                     end = Number((i + 1) * chunkSize);
                     // eslint-disable-next-line no-await-in-loop
-                    decodedResult = await (0, contract_utils_1.callGetSLDNode)(this.client, nameHash, tldId, begin, end);
+                    decodedResult = yield (0, contract_utils_1.callGetSLDNode)(this.client, nameHash, tldId, begin, end);
                     if (decodedResult !== constants_config_1.NULL_CONTRACT_ID) {
                         // Found the owner
                         break;
@@ -43,19 +52,19 @@ class HashgraphNames {
             catch (err) {
                 throw new Error('Failed to get SLDNode');
             }
-        };
+        });
         /**
        * @description Takes a nameHash and returns the SLD that contains it
        * @param nameHash: {Buffer} The nameHash of the domain to be queried
        * @returns {Promise<ContractId>}
        */
-        this.resolveSLDNode = async (nameHash) => {
+        this.resolveSLDNode = (nameHash) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const tldNodeId = await (0, contract_utils_1.callGetTLD)(this.client, nameHash.tldHash);
+                const tldNodeId = yield (0, contract_utils_1.callGetTLD)(this.client, nameHash.tldHash);
                 if (String(tldNodeId) === String(constants_config_1.NULL_CONTRACT_ID)) {
                     throw new Error('Failed to getTLDNode');
                 }
-                const sldNodeId = await this.getSLDNode(nameHash, tldNodeId);
+                const sldNodeId = yield this.getSLDNode(nameHash, tldNodeId);
                 if (String(sldNodeId) === String(constants_config_1.NULL_CONTRACT_ID)) {
                     throw new Error('Failed to getSLDNode');
                 }
@@ -64,81 +73,81 @@ class HashgraphNames {
             catch (err) {
                 throw new Error('Failed to resolve SLD');
             }
-        };
+        });
         /**
        * @description Resolves a Second Level Domain to the wallet address of the domain's owner
        * @param domain: {string} The domain to query
        * @returns {Promise<AccountId>}
        */
-        this.resolveSLD = async (domain) => {
+        this.resolveSLD = (domain) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const nameHash = HashgraphNames.generateNameHash(domain);
-                const sldNodeId = await this.resolveSLDNode(nameHash);
-                const serial = await (0, contract_utils_1.callGetSerial)(this.client, sldNodeId, nameHash);
-                const { accountId } = await this.getTokenNFTInfo(serial);
+                const sldNodeId = yield this.resolveSLDNode(nameHash);
+                const serial = yield (0, contract_utils_1.callGetSerial)(this.client, sldNodeId, nameHash);
+                const { accountId } = yield this.getTokenNFTInfo(serial);
                 return accountId;
             }
             catch (err) {
                 throw new Error('Failed to get wallet');
             }
-        };
+        });
         /**
        * @description Get the SLDInfo for a given domain
        * @param domain: {string} The domain to query
        * @returns {Promise<SLDInfo>}
        */
-        this.getSLDInfo = async (domain) => {
+        this.getSLDInfo = (domain) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const nameHash = HashgraphNames.generateNameHash(domain);
-                const sldNodeId = await this.resolveSLDNode(nameHash);
-                return await (0, contract_utils_1.callGetSLDInfo)(this.client, sldNodeId, nameHash);
+                const sldNodeId = yield this.resolveSLDNode(nameHash);
+                return yield (0, contract_utils_1.callGetSLDInfo)(this.client, sldNodeId, nameHash);
             }
             catch (err) {
                 throw new Error('Failed to get SLD Info');
             }
-        };
+        });
         /**
        * @description Get the SubdomainInfo for a given domain
        * @param domain: {string} The domain to query
        * @returns {Promise<SubdomainInfo>}
        */
-        this.getSubdomainInfo = async (domain) => {
+        this.getSubdomainInfo = (domain) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const nameHash = HashgraphNames.generateNameHash(domain);
-                const sldNodeId = await this.resolveSLDNode(nameHash);
-                const sldNodeInfo = await (0, contract_utils_1.callGetSLDInfo)(this.client, sldNodeId, nameHash);
+                const sldNodeId = yield this.resolveSLDNode(nameHash);
+                const sldNodeInfo = yield (0, contract_utils_1.callGetSLDInfo)(this.client, sldNodeId, nameHash);
                 const subdomainNodeId = sdk_1.ContractId.fromSolidityAddress(sldNodeInfo.subdomainNode);
-                return await (0, contract_utils_1.callGetSubdomainInfo)(this.client, subdomainNodeId, nameHash);
+                return yield (0, contract_utils_1.callGetSubdomainInfo)(this.client, subdomainNodeId, nameHash);
             }
             catch (err) {
                 throw new Error('Failed to get SLD Info');
             }
-        };
+        });
         /**
        * @description Get all subdomains for a given domain
        * @param domain: {string} The domain to query
        * @returns {Promise<string[]>}
        */
-        this.getSLDSubdomains = async (domain) => {
+        this.getSLDSubdomains = (domain) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const nameHash = HashgraphNames.generateNameHash(domain);
-                const sldNodeId = await this.resolveSLDNode(nameHash);
-                const sldNodeInfo = await (0, contract_utils_1.callGetSLDInfo)(this.client, sldNodeId, nameHash);
+                const sldNodeId = yield this.resolveSLDNode(nameHash);
+                const sldNodeInfo = yield (0, contract_utils_1.callGetSLDInfo)(this.client, sldNodeId, nameHash);
                 const subdomainNodeId = sdk_1.ContractId.fromSolidityAddress(sldNodeInfo.subdomainNode);
-                return await (0, contract_utils_1.callDumpNames)(this.client, subdomainNodeId);
+                return yield (0, contract_utils_1.callDumpNames)(this.client, subdomainNodeId);
             }
             catch (err) {
                 throw new Error('Failed to get SLD Info');
             }
-        };
-        this.getAllSLDsInWallet = async () => {
+        });
+        this.getAllSLDsInWallet = () => __awaiter(this, void 0, void 0, function* () {
             try {
-                return await (0, contract_utils_1.queryNFTsFromRestAPI)(this.client, this.tokenId);
+                return yield (0, contract_utils_1.queryNFTsFromRestAPI)(this.client, this.tokenId);
             }
             catch (err) {
                 throw new Error('Failed to get SLD Info');
             }
-        };
+        });
         /**
        * @description Executes an HTS TransferTransaction
        * @param ownerSignature: {TransactionSignature} The signature information for the NFT owner
@@ -146,14 +155,14 @@ class HashgraphNames {
        * @param transactionBytes: {Uint8Array} The transaction bytes to be executed
        * @returns {Promise<number>}
        */
-        this.transferDomain = async (ownerSignature, receiverSignature, transactionBytes) => {
+        this.transferDomain = (ownerSignature, receiverSignature, transactionBytes) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const transaction = HashgraphNames.bytesToTransaction(transactionBytes);
                 transaction
                     .addSignature(ownerSignature.signerPublicKey, ownerSignature.signature)
                     .addSignature(receiverSignature.signerPublicKey, receiverSignature.signature);
-                const submitTransaction = await transaction.execute(this.client);
-                const receipt = await submitTransaction.getReceipt(this.client);
+                const submitTransaction = yield transaction.execute(this.client);
+                const receipt = yield submitTransaction.getReceipt(this.client);
                 if (receipt.status._code !== sdk_1.Status.Success._code) {
                     throw new Error('TransferTransaction failed');
                 }
@@ -162,7 +171,7 @@ class HashgraphNames {
                 throw new Error('Transfer Domain failed');
             }
             return constants_config_1.CONFIRMATION_STATUS;
-        };
+        });
         /**
        * @description Creates a HTS TransferTransaction and returns it as an Uint8Array
        * @param domain: {string} The domain for the NFT to transfer
@@ -171,13 +180,13 @@ class HashgraphNames {
        * @param purchasePrice: {number} The amount in tinyBar for which the NFT is being purchased
        * @returns {Uint8Array}
        */
-        this.transferTransactionCreate = async (domain, NFTOwner, NFTReceiver, purchasePrice) => {
+        this.transferTransactionCreate = (domain, NFTOwner, NFTReceiver, purchasePrice) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const fromIdNFT = sdk_1.AccountId.fromString(NFTOwner);
                 const toIdNFT = sdk_1.AccountId.fromString(NFTReceiver);
                 const nameHash = HashgraphNames.generateNameHash(domain);
-                const sldNodeId = await this.resolveSLDNode(nameHash);
-                const serial = await (0, contract_utils_1.callGetSerial)(this.client, sldNodeId, nameHash);
+                const sldNodeId = yield this.resolveSLDNode(nameHash);
+                const serial = yield (0, contract_utils_1.callGetSerial)(this.client, sldNodeId, nameHash);
                 const nodeId = [new sdk_1.AccountId(3)];
                 const tokenTransferTx = new sdk_1.TransferTransaction()
                     .addNftTransfer(this.tokenId, serial, fromIdNFT, toIdNFT)
@@ -190,16 +199,16 @@ class HashgraphNames {
             catch (err) {
                 throw new Error('MultiSig transaction create failed');
             }
-        };
+        });
         /**
        * @description Simple wrapper around HTS TokenNftInfoQuery()
        * @param serial: {number} The serial of the NFT to query
        * @returns {Promise<TokenNftInfo>}
        */
-        this.getTokenNFTInfo = async (serial) => {
+        this.getTokenNFTInfo = (serial) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const nftId = new sdk_1.NftId(this.tokenId, serial);
-                const nftInfo = await new sdk_1.TokenNftInfoQuery()
+                const nftInfo = yield new sdk_1.TokenNftInfoQuery()
                     .setNftId(nftId)
                     .execute(this.client);
                 return nftInfo[0];
@@ -207,7 +216,7 @@ class HashgraphNames {
             catch (err) {
                 throw new Error('Get NFT info failed');
             }
-        };
+        });
         this.operatorId = sdk_1.AccountId.fromString(operatorId);
         this.operatorKey = sdk_1.PrivateKey.fromString(operatorKey);
         this.client = sdk_1.Client

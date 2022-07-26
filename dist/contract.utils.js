@@ -22,6 +22,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -79,7 +88,7 @@ exports.decodeFunctionResult = decodeFunctionResult;
  * @param keys: {PrivateKey[]} (optional) The keys required to sign the transaction
  * @returns {Promise<any>}
  */
-const callContractFunc = async (client, contractId, contractType, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS, keys = null) => {
+const callContractFunc = (client, contractId, contractType, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS, keys = null) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const tx = new sdk_1.ContractExecuteTransaction()
             .setContractId(contractId)
@@ -88,10 +97,10 @@ const callContractFunc = async (client, contractId, contractType, funcName, func
             .freezeWith(client);
         if (keys) {
             const promises = keys.map((key) => tx.sign(key));
-            await Promise.all(promises);
+            yield Promise.all(promises);
         }
-        const response = await tx.execute(client);
-        const record = await response.getRecord(client);
+        const response = yield tx.execute(client);
+        const record = yield response.getRecord(client);
         if (!record || !record.contractFunctionResult || record.receipt.status._code !== sdk_1.Status.Success._code) {
             throw new Error('ContractExecuteTransaction failed');
         }
@@ -100,7 +109,7 @@ const callContractFunc = async (client, contractId, contractType, funcName, func
     catch (err) {
         return new Error('callContractFunc failed');
     }
-};
+});
 exports.callContractFunc = callContractFunc;
 /**
  * @description Wrapper around Hedera SDK ContractCallQuery
@@ -112,14 +121,14 @@ exports.callContractFunc = callContractFunc;
  * @param gas: {number} (optional) The max gas to use for the call
  * @returns {Promise<any>}
  */
-const queryContractFunc = async (client, contractId, contractType, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS) => {
+const queryContractFunc = (client, contractId, contractType, funcName, funcParams = new sdk_1.ContractFunctionParameters(), gas = constants_config_1.MAX_GAS) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const tx = new sdk_1.ContractCallQuery()
             .setContractId(contractId)
             .setFunction(funcName, funcParams)
             .setGas(gas)
             .setQueryPayment(new sdk_1.Hbar(1));
-        const response = await tx.execute(client);
+        const response = yield tx.execute(client);
         if (!response || !response.bytes) {
             throw new Error('ContractCallQuery failed');
         }
@@ -128,7 +137,7 @@ const queryContractFunc = async (client, contractId, contractType, funcName, fun
     catch (err) {
         return new Error('queryContractFunc failed');
     }
-};
+});
 exports.queryContractFunc = queryContractFunc;
 /**
  * @description Retrieves the tld manager id
@@ -142,15 +151,15 @@ exports.getTLDManagerId = getTLDManagerId;
  * @param tldNodeId: {ContractId} TLDNode contract id
  * @returns {Promise<number>}
  */
-const callGetNumNodes = async (client, tldNodeId) => {
+const callGetNumNodes = (client, tldNodeId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = (await (0, exports.queryContractFunc)(client, tldNodeId, constants_config_1.ContractTypes.TLDNode, 'getNumNodes'));
+        const result = (yield (0, exports.queryContractFunc)(client, tldNodeId, constants_config_1.ContractTypes.TLDNode, 'getNumNodes'));
         return Number(result[0]);
     }
     catch (err) {
         throw new Error('Failed to call getNumNodes');
     }
-};
+});
 exports.callGetNumNodes = callGetNumNodes;
 /**
  * @description Simple wrapper around callContractFunc for the getTLD smart contract function
@@ -158,18 +167,18 @@ exports.callGetNumNodes = callGetNumNodes;
  * @param tldHash: {Buffer} The hash of the TLD you wish to query
  * @returns {Promise<ContractId>}
  */
-const callGetTLD = async (client, tldHash) => {
+const callGetTLD = (client, tldHash) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const tldManagerId = (0, exports.getTLDManagerId)();
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(tldHash);
-        const result = await (0, exports.queryContractFunc)(client, tldManagerId, constants_config_1.ContractTypes.TLDManager, 'getTLD', params);
+        const result = yield (0, exports.queryContractFunc)(client, tldManagerId, constants_config_1.ContractTypes.TLDManager, 'getTLD', params);
         return sdk_1.ContractId.fromSolidityAddress(result[0]);
     }
     catch (err) {
         throw new Error('Failed to call getTLD');
     }
-};
+});
 exports.callGetTLD = callGetTLD;
 /**
  * @description Simple wrapper around callContractFunc for the getSLDNode smart contract function
@@ -180,19 +189,19 @@ exports.callGetTLD = callGetTLD;
  * @param end: {number} The end index in the array of nodes of the manager
  * @returns {Promise<ContractId>}
  */
-const callGetSLDNode = async (client, nameHash, tldNodeId, begin = 0, end = 0) => {
+const callGetSLDNode = (client, nameHash, tldNodeId, begin = 0, end = 0) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(nameHash.sldHash)
             .addUint256(begin)
             .addUint256(end);
-        const result = await (0, exports.queryContractFunc)(client, tldNodeId, constants_config_1.ContractTypes.TLDNode, 'getSLDNode', params);
+        const result = yield (0, exports.queryContractFunc)(client, tldNodeId, constants_config_1.ContractTypes.TLDNode, 'getSLDNode', params);
         return sdk_1.ContractId.fromSolidityAddress(result[0]);
     }
     catch (err) {
         throw new Error('Failed to call getSLDNode');
     }
-};
+});
 exports.callGetSLDNode = callGetSLDNode;
 /**
  * @description Simple wrapper around callContractFunc for the getSerial smart contract function
@@ -201,17 +210,17 @@ exports.callGetSLDNode = callGetSLDNode;
  * @param nameHash: {NameHash} The hash of the domain to query
  * @returns {Promise<number>}
  */
-const callGetSerial = async (client, sldNodeId, nameHash) => {
+const callGetSerial = (client, sldNodeId, nameHash) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(nameHash.sldHash);
-        const result = await (0, exports.queryContractFunc)(client, sldNodeId, constants_config_1.ContractTypes.SLDNode, 'getSerial', params);
+        const result = yield (0, exports.queryContractFunc)(client, sldNodeId, constants_config_1.ContractTypes.SLDNode, 'getSerial', params);
         return Number(result[0]);
     }
     catch (err) {
         throw new Error('Failed to call getSerial');
     }
-};
+});
 exports.callGetSerial = callGetSerial;
 /**
  * @description Simple wrapper around callContractFunc for the getSLDInfo smart contract function
@@ -220,17 +229,17 @@ exports.callGetSerial = callGetSerial;
  * @param nameHash: {NameHash} The hash of the domain to query
  * @returns {Promise<SLDInfo>}
  */
-const callGetSLDInfo = async (client, sldNodeId, nameHash) => {
+const callGetSLDInfo = (client, sldNodeId, nameHash) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(nameHash.sldHash);
-        const result = await (0, exports.queryContractFunc)(client, sldNodeId, constants_config_1.ContractTypes.SLDNode, 'getSLDInfo', params);
+        const result = yield (0, exports.queryContractFunc)(client, sldNodeId, constants_config_1.ContractTypes.SLDNode, 'getSLDInfo', params);
         return result[0];
     }
     catch (err) {
         throw new Error('Failed to call getDomainInfo');
     }
-};
+});
 exports.callGetSLDInfo = callGetSLDInfo;
 /**
  * @description Simple wrapper around callContractFunc for the getSubdomainInfo smart contract function
@@ -239,17 +248,17 @@ exports.callGetSLDInfo = callGetSLDInfo;
  * @param nameHash: {NameHash} The hash of the domain to query
  * @returns {Promise<SubdomainInfo>}
  */
-const callGetSubdomainInfo = async (client, subdomainNodeId, nameHash) => {
+const callGetSubdomainInfo = (client, subdomainNodeId, nameHash) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const params = new sdk_1.ContractFunctionParameters()
             .addBytes32(nameHash.subdomainHash);
-        const result = await (0, exports.queryContractFunc)(client, subdomainNodeId, constants_config_1.ContractTypes.SubdomainNode, 'getSubdomainInfo', params);
+        const result = yield (0, exports.queryContractFunc)(client, subdomainNodeId, constants_config_1.ContractTypes.SubdomainNode, 'getSubdomainInfo', params);
         return result[0];
     }
     catch (err) {
         throw new Error('Failed to call getDomainInfo');
     }
-};
+});
 exports.callGetSubdomainInfo = callGetSubdomainInfo;
 /**
  * @description Simple wrapper around callContractFunc for the dumpNames smart contract function
@@ -257,15 +266,15 @@ exports.callGetSubdomainInfo = callGetSubdomainInfo;
  * @param subdomainNodeId: {ContractId} The contract id to query for the SubdomainInfo
  * @returns {Promise<string[]>}
  */
-const callDumpNames = async (client, subdomainNodeId) => {
+const callDumpNames = (client, subdomainNodeId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = await (0, exports.queryContractFunc)(client, subdomainNodeId, constants_config_1.ContractTypes.SubdomainNode, 'dumpNames');
+        const result = yield (0, exports.queryContractFunc)(client, subdomainNodeId, constants_config_1.ContractTypes.SubdomainNode, 'dumpNames');
         return result[0];
     }
     catch (err) {
         throw new Error('Failed to call getDomainInfo');
     }
-};
+});
 exports.callDumpNames = callDumpNames;
 /**
  * @description Issues a Rest API request to get all NFTs in a wallet
@@ -273,7 +282,7 @@ exports.callDumpNames = callDumpNames;
  * @param tokenId: {TokenId} Id of token of interest for the query
  * @returns {Promise<string[]>}
  */
-const queryNFTsFromRestAPI = async (client, tokenId) => {
+const queryNFTsFromRestAPI = (client, tokenId) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const accountId = (_a = client.operatorAccountId) === null || _a === void 0 ? void 0 : _a.toString();
@@ -292,7 +301,7 @@ const queryNFTsFromRestAPI = async (client, tokenId) => {
             method: 'get',
             url,
         };
-        const res = await (0, axios_1.default)(config);
+        const res = yield (0, axios_1.default)(config);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const nfts = res.data.nfts.map((t) => ({
             accountId: t.account_id,
@@ -305,5 +314,5 @@ const queryNFTsFromRestAPI = async (client, tokenId) => {
     catch (err) {
         throw new Error('Failed to get All SLDs');
     }
-};
+});
 exports.queryNFTsFromRestAPI = queryNFTsFromRestAPI;
