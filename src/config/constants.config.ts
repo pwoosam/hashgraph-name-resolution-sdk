@@ -6,11 +6,6 @@ export const HEDERA_SUCCESS = 22; // The transaction succeeded
 
 export const TOKEN_ID = '0.0.47717582';
 export const TLD_MANAGER_ID = '0.0.47717584';
-export const TLD_MANAGER_ABI = '../src/contracts/abi/src_contracts_TLDManager_sol_TLDManager.abi';
-
-export const TLD_NODE_ABI = '../src/contracts/abi/src_contracts_TLDNode_sol_TLDNode.abi';
-export const SLD_NODE_ABI = '../src/contracts/abi/src_contracts_SLDNode_sol_SLDNode.abi';
-export const SUBDOMAIN_NODE_ABI = '../src/contracts/abi/src_contracts_SubdomainNode_sol_SubdomainNode.abi';
 
 export const MAX_GAS = 4000000;
 
