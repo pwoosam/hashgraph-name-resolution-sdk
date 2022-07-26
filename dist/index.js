@@ -7,7 +7,6 @@ exports.HashgraphNames = void 0;
 const sdk_1 = require("@hashgraph/sdk");
 const keccak256_1 = __importDefault(require("keccak256"));
 const constants_config_1 = require("./config/constants.config");
-const logger_config_1 = require("./config/logger.config");
 const contract_utils_1 = require("./contract.utils");
 class HashgraphNames {
     constructor(operatorId, operatorKey) {
@@ -42,7 +41,6 @@ class HashgraphNames {
                 return decodedResult;
             }
             catch (err) {
-                logger_config_1.logger.error(err);
                 throw new Error('Failed to get SLDNode');
             }
         };
@@ -64,7 +62,6 @@ class HashgraphNames {
                 return sldNodeId;
             }
             catch (err) {
-                logger_config_1.logger.error(err);
                 throw new Error('Failed to resolve SLD');
             }
         };
@@ -82,7 +79,6 @@ class HashgraphNames {
                 return accountId;
             }
             catch (err) {
-                logger_config_1.logger.error(err);
                 throw new Error('Failed to get wallet');
             }
         };
@@ -98,7 +94,6 @@ class HashgraphNames {
                 return await (0, contract_utils_1.callGetSLDInfo)(this.client, sldNodeId, nameHash);
             }
             catch (err) {
-                logger_config_1.logger.error(err);
                 throw new Error('Failed to get SLD Info');
             }
         };
@@ -116,7 +111,6 @@ class HashgraphNames {
                 return await (0, contract_utils_1.callGetSubdomainInfo)(this.client, subdomainNodeId, nameHash);
             }
             catch (err) {
-                logger_config_1.logger.error(err);
                 throw new Error('Failed to get SLD Info');
             }
         };
@@ -134,7 +128,6 @@ class HashgraphNames {
                 return await (0, contract_utils_1.callDumpNames)(this.client, subdomainNodeId);
             }
             catch (err) {
-                logger_config_1.logger.error(err);
                 throw new Error('Failed to get SLD Info');
             }
         };
@@ -143,7 +136,6 @@ class HashgraphNames {
                 return await (0, contract_utils_1.queryNFTsFromRestAPI)(this.client, this.tokenId);
             }
             catch (err) {
-                logger_config_1.logger.error(err);
                 throw new Error('Failed to get SLD Info');
             }
         };
@@ -213,7 +205,6 @@ class HashgraphNames {
                 return nftInfo[0];
             }
             catch (err) {
-                logger_config_1.logger.error(err);
                 throw new Error('Get NFT info failed');
             }
         };
