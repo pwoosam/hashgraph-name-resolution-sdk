@@ -36,10 +36,9 @@
     "ts-jest": "^28.0.3",
     "ts-node": "^10.4.0"
   },
-  "peerDependencies": {
-    "@hashgraph/sdk": "^2.14.2"
-  },
+  "peerDependencies": {},
   "dependencies": {
+    "@hashgraph/sdk": "^2.17.0",
     "@types/jest": "^27.5.1",
     "axios": "^0.27.2",
     "dotenv": "^16.0.1",
