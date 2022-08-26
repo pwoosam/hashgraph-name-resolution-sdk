@@ -1,6 +1,6 @@
 {
-  "name": "@piefi-platform/hashgraph-names-sdk",
-  "version": "2.0.7",
+  "name": "@piefi-platform/hashgraph-name-resolution-sdk",
+  "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pieFi-platform/hashgraph-names-sdk.git"
+    "url": "git+https://github.com/pieFi-platform/hashgraph-name-resolution-sdk.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pieFi-platform/hashgraph-names-sdk/issues"
+    "url": "https://github.com/pieFi-platform/hashgraph-name-resolution-sdk/issues"
   },
-  "homepage": "https://github.com/pieFi-platform/hashgraph-names-sdk#readme",
+  "homepage": "https://github.com/pieFi-platform/hashgraph-name-resolution-sdk#readme",
   "publishConfig": {
     "@pieFi-platform:registry": "https://npm.pkg.github.com"
   },
@@ -31,25 +31,12 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
-    "jest": "^28.1.0",
-    "jest-mock-extended": "^2.0.6",
-    "ts-jest": "^28.0.3",
     "ts-node": "^10.4.0"
   },
-  "peerDependencies": {},
   "dependencies": {
     "@hashgraph/sdk": "^2.17.0",
-    "@types/jest": "^27.5.1",
     "axios": "^0.27.2",
-    "dotenv": "^16.0.1",
     "keccak256": "^1.0.6",
     "web3": "^1.7.1"
-  },
-  "jest": {
-    "testPathIgnorePatterns": [
-      "./dist",
-      "./src/__test__/utils.test.ts"
-    ],
-    "preset": "ts-jest"
   }
 }
