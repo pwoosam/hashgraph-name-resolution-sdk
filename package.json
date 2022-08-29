@@ -1,6 +1,6 @@
 {
   "name": "@piefi-platform/hashgraph-name-resolution-sdk",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
