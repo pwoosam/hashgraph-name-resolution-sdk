@@ -6,9 +6,9 @@
   "scripts": {
     "build": "tsc",
     "auto": "tsc --watch --preserveWatchOutput",
-    "fix-all-lint": "npx eslint . --fix --ext .ts",
+    "lint": "npx eslint . --fix --ext .ts",
     "jest": "jest --detectOpenHandles",
-    "test": "exit 0"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
     "@pieFi-platform:registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
+    "@types/jest": "^29.0.0",
     "@types/node": "^17.0.45",
     "@typescript-eslint/eslint-plugin": "^5.12.1",
     "@typescript-eslint/parser": "^5.12.1",
@@ -31,6 +32,8 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
+    "jest": "^28.0.1",
+    "ts-jest": "^28.0.8",
     "ts-node": "^10.4.0"
   },
   "dependencies": {

@@ -1,176 +1,102 @@
-import {
-  AccountId,
-  TokenId,
-  TopicId,
-} from '@hashgraph/sdk';
-import keccak256 from 'keccak256';
-import {
-  API_MAX_LIMIT,
-  NameHash,
-  SLDTopicMessage,
-  TLDTopicMessage,
-} from './config/constants.config';
-import {
-  queryNFTOwner,
-  querySLDTopicMessages,
-  queryTLDTopicMessages,
-} from './contract.utils';
+import { MirrorNode, NetworkType } from './mirrorNode';
+import { hashDomain } from './hashDomain';
+import { TopLevelDomain } from './types/TopLevelDomain';
+import { SecondLevelDomain } from './types/SecondLevelDomain';
+import { MessageObject } from './types/MessageObject';
+import { NameHash } from './types/NameHash';
 
-export class HashgraphNames {
-  tldMessages: TLDTopicMessage[];
+const tldTopicId = '0.0.48097305';
 
-  constructor() {
-    this.tldMessages = [];
-    this.populateTLDMessages();
+export class Resolver {
+  mirrorNode: MirrorNode;
+  topLevelDomains: TopLevelDomain[] = [];
+
+  constructor(networkType: NetworkType, authKey = '') {
+    this.mirrorNode = new MirrorNode(networkType, authKey);
   }
 
-  /**
- * @description Queries the Manager Topic for all TLD messages and stores them
- */
-  populateTLDMessages = async () => {
-    this.tldMessages = await queryTLDTopicMessages();
-  };
-
-  /**
- * @description Generate a NameHash of the provided domain string
- * @param domain: {string} The domain string to hash
- * @returns {Buffer}
- */
-  static generateNameHash = (domain: string): NameHash => {
-    if (!domain) {
-      return {
-        domain,
-        tldHash: Buffer.from([0x0]),
-        sldHash: Buffer.from([0x0]),
-      };
-    }
-    const domainsList = domain.split('.').reverse();
-    const tld = domainsList[0];
-    let sld;
-    if (domainsList.length > 1) {
-      sld = domainsList.slice(0, 2);
-    }
-
-    let tldHash = Buffer.from([0x0]);
-    let sldHash = Buffer.from([0x0]);
-
-    if (tld) {
-      tldHash = keccak256(tld);
-    }
-    if (sld) {
-      sldHash = sld.reduce(
-        (prev, curr) => keccak256(prev + curr),
-        Buffer.from(''),
-      );
-    }
-
-    return { domain, tldHash, sldHash };
-  };
-
-  /**
-   * @description Get the tld message on the Manager topic for a given nameHash
-   * @param nameHash: {NameHash} The nameHash for the sld to query
-   * @returns {Promise<TLDTopicMessage>}
-   */
-  private queryTLDTopicMessage = async (nameHash: NameHash): Promise<TLDTopicMessage> => {
-    try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const found = this.tldMessages.find((message: any) => (message.nameHash.tldHash === nameHash.tldHash.toString('hex')));
-      if (!found) throw new Error('Not Found');
-
-      return found;
-    } catch (err) {
-    // eslint-disable-next-line no-console
-      console.log(err);
-      throw new Error('Failed to getMessageByRestQuery');
-    }
-  };
-
-  /**
-   * @description Get the sld message on the TLD topic for a given nameHash
-   * @param nameHash: {NameHash} The nameHash for the sld to query
-   * @param inputTopicId: {TopicId | null} The topic id to use for the query. If none is provided,
-   * the manager topic will be queried first to get the topic for the namehash
-   * @returns {Promise<SLDTopicMessage>}
-   */
-  private getSLDTopicMessageByHash = async (
-    nameHash: NameHash,
-    inputTopicId: TopicId | null = null,
-  ): Promise<SLDTopicMessage> => {
-    try {
-      let topicId;
-      if (!inputTopicId) {
-        const tldTopicMessage = await this.queryTLDTopicMessage(nameHash);
-        topicId = TopicId.fromString(tldTopicMessage.topicId);
-      } else {
-        topicId = inputTopicId;
-      }
-
-      let topicMessagesResult;
-      let sequenceNumber = 1;
-      let found;
-      do {
-        // eslint-disable-next-line no-await-in-loop
-        topicMessagesResult = await querySLDTopicMessages(topicId, sequenceNumber);
-        sequenceNumber += topicMessagesResult.length;
-        const sldTopicMessages = topicMessagesResult as SLDTopicMessage [];
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        found = sldTopicMessages.filter((message: any) => (message.nameHash.sldHash === nameHash.sldHash.toString('hex')));
-        if (found.length) break;
-      } while (topicMessagesResult.length === API_MAX_LIMIT);
-
-      if (!found.length) throw new Error(`SLD message for:[${nameHash.domain}] not found on topic:[${topicId.toString()}]`);
-      const message = found.reduce(
-        (prev: SLDTopicMessage, curr: SLDTopicMessage) => (prev.nftId > curr.nftId ? prev : curr),
-      );
-      return message;
-    } catch (err) {
-    // eslint-disable-next-line no-console
-      console.log(err);
-      throw new Error('Failed to getMessageByRestQuery');
-    }
-  };
-
-  /**
-   * @description Resolve the owner of a domain by REST queries
-   * @param nameHash: {NameHash} The domain to query
-   * @returns {Promise<AccountId>}
-   */
-  private resolveDomainByRestQuery = async (
-    nameHash: NameHash,
-  ): Promise<AccountId> => {
-    try {
-      const tldTopicMessage = await this.queryTLDTopicMessage(nameHash);
-      const tokenId = TokenId.fromString(tldTopicMessage.tokenId);
-      const topicId = TopicId.fromString(tldTopicMessage.topicId);
-
-      const message = await this.getSLDTopicMessageByHash(nameHash, topicId);
-      const accountId = await queryNFTOwner(message.nftId, tokenId);
-
-      return accountId;
-    } catch (err) {
-    // eslint-disable-next-line no-console
-      console.log(err);
-      throw new Error('Failed to resolveDomainByRestQuery');
-    }
-  };
+  public async init() {
+    this.topLevelDomains = await this.getTopLevelDomains();
+  }
 
   /**
  * @description Resolves a Second Level Domain to the wallet address of the domain's owner
  * @param domain: {string} The domain to query
  * @returns {Promise<AccountId>}
  */
-  resolveSLD = async (
-    domain: string,
-  ): Promise<AccountId> => {
+  public async resolveSLD(domain: string): Promise<string> {
     try {
-      const nameHash = HashgraphNames.generateNameHash(domain);
-      return await this.resolveDomainByRestQuery(nameHash);
+      const nameHash = hashDomain(domain);
+      const sld = await this.getSecondLevelDomain(nameHash);
+      const [tokenId, serial] = sld.nftId.split(':');
+      const nft = await this.mirrorNode.getNFT(tokenId, serial);
+      return nft.account_id;
     } catch (err) {
-    // eslint-disable-next-line no-console
-      console.log(err);
-      throw new Error('Failed to resolveSLD');
+      throw err;
     }
   };
+
+  // Private
+
+  /**
+ * @description Retrieves and stores top level domains
+ */
+  private async getTopLevelDomains(): Promise<TopLevelDomain[]> {
+    const response = await this.mirrorNode.getTopicMessages(tldTopicId, 0);
+    const messages: MessageObject[] = response;
+
+    return messages.map((messageObject: MessageObject) => {
+      const decoded = Buffer.from(messageObject.message, 'base64').toString();
+      return JSON.parse(decoded) as TopLevelDomain;
+    });
+  }
+
+  /**
+   * @description Get the tld message on the Manager topic for a given nameHash
+   * @param nameHash: {NameHash} The nameHash for the sld to query
+   * @returns {Promise<TLDTopicMessage>}
+   */
+  private getTopLevelDomain(nameHash: NameHash): TopLevelDomain {
+    const found = this.topLevelDomains.find((tld: TopLevelDomain) => (
+      tld.nameHash.tldHash === nameHash.tldHash.toString('hex')
+    ));
+    if (!found) throw new Error('TLD not found');
+
+    return found;
+  }
+
+  /**
+ * @description Retrieves second level domains
+ */
+  private async getSecondLevelDomains(topicId: string, offset: number): Promise<SecondLevelDomain[]> {
+    const response = await this.mirrorNode.getTopicMessages(topicId, offset);
+    const messages: MessageObject[] = response;
+
+    return messages.map((messageObject: MessageObject) => {
+      const decoded = Buffer.from(messageObject.message, 'base64').toString();
+      return JSON.parse(decoded) as SecondLevelDomain;
+    });
+  }
+
+
+  /**
+   * @description Get the sld message on the TLD topic for a given nameHash
+   * @param nameHash: {NameHash} The nameHash for the sld to query
+   * @param inputTopicId: {TopicId | null} The topic id to use for the query. If none is provided,
+   * the manager topic will be queried first to get the topic for the namehash
+   * @returns {Promise<SecondLevelDomain>}
+   */
+
+  // Improve method to look for unexpired domains
+  private async getSecondLevelDomain(nameHash: NameHash): Promise<SecondLevelDomain> {
+    const tld: TopLevelDomain = this.getTopLevelDomain(nameHash);
+
+    for(let offset = 0; ; offset++) {
+      const slds: SecondLevelDomain[] = await this.getSecondLevelDomains(tld.topicId, offset);
+      const sld = slds.find((sld: SecondLevelDomain) => sld.nameHash.sldHash === nameHash.sldHash.toString('hex'));
+      if(sld) return sld;
+    }
+
+    throw new Error(`SLD message for:[${nameHash.domain}] not found on topic:[${tld.topicId.toString()}]`);
+  }
 }
