@@ -48,15 +48,13 @@ class Resolver {
      * @returns {Promise<TLDTopicMessage>}
      */
     getTopLevelDomain(nameHash) {
-        // console.log(nameHash.tldHash.toString('hex'));
-        // console.log(this.topLevelDomains.length);
         const found = this.topLevelDomains.find((tld) => (tld.nameHash.tldHash === nameHash.tldHash.toString('hex')));
         if (!found)
             throw new Error('TLD not found');
         return found;
     }
     /**
-   * @description Retrieves and stores second level domains
+   * @description Retrieves second level domains
    */
     async getSecondLevelDomains(topicId, offset) {
         const response = await this.mirrorNode.getTopicMessages(topicId, offset);
@@ -76,9 +74,9 @@ class Resolver {
     // Improve method to look for unexpired domains
     async getSecondLevelDomain(nameHash) {
         const tld = this.getTopLevelDomain(nameHash);
-        for (let offset = 0; offset < 5; offset++) {
+        for (let offset = 0;; offset++) {
             const slds = await this.getSecondLevelDomains(tld.topicId, offset);
-            const sld = slds.find((sld) => sld.nameHash.domain === nameHash.domain);
+            const sld = slds.find((sld) => sld.nameHash.sldHash === nameHash.sldHash.toString('hex'));
             if (sld)
                 return sld;
         }

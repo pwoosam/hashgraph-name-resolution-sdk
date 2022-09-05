@@ -12,6 +12,8 @@ var NetworkBaseURL;
     NetworkBaseURL["hedera_main"] = "https://mainnet-public.mirrornode.hedera.com/api/v1";
     NetworkBaseURL["lworks_test"] = "https://testnet.mirror.lworks.io/api/v1";
     NetworkBaseURL["lworks_main"] = "https://mainnet.mirror.lworks.io/api/v1";
+    NetworkBaseURL["arkhia_test"] = "https://hedera.testnet.arkhia.io/api/v1";
+    NetworkBaseURL["arkhia_main"] = "https://hedera.mainnet.arkhia.io/api/v1";
 })(NetworkBaseURL = exports.NetworkBaseURL || (exports.NetworkBaseURL = {}));
 // Max page size allowed by hedera nodes
 const MAX_PAGE_SIZE = 100;
@@ -44,6 +46,10 @@ class MirrorNode {
                 return NetworkBaseURL.lworks_test;
             case 'lworks_main':
                 return NetworkBaseURL.lworks_main;
+            case 'arkhia_test':
+                return NetworkBaseURL.arkhia_test;
+            case 'arkhia_main':
+                return NetworkBaseURL.arkhia_main;
             default:
                 throw new Error('No base URL available for NetworkType');
         }
