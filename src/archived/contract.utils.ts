@@ -2,8 +2,10 @@ import { AccountId, TokenId, TopicId } from '@hashgraph/sdk';
 import axios from 'axios';
 import {
   API_MAX_LIMIT,
-  BASE_MAIN_URL,
-  BASE_TEST_URL,
+  HEDERA_MAIN_URL,
+  HEDERA_TEST_URL,
+  LEDGERWORKS_MAIN_URL,
+  LEDGERWORKS_TEST_URL,
   MANAGER_TOPIC_ID,
   NETWORK,
   SLDTopicMessage,
@@ -20,11 +22,19 @@ export const queryTLDTopicMessages = async (): Promise<TLDTopicMessage []> => {
     switch (NETWORK) {
       case 'testnet':
         // eslint-disable-next-line max-len
-        url = `${BASE_TEST_URL}/topics/${MANAGER_TOPIC_ID}/messages/?limit=${API_MAX_LIMIT}`;
+        url = `${HEDERA_TEST_URL}/topics/${MANAGER_TOPIC_ID}/messages/?limit=${API_MAX_LIMIT}`;
         break;
       case 'mainnet':
         // eslint-disable-next-line max-len
-        url = `${BASE_MAIN_URL}/topics/${MANAGER_TOPIC_ID}/messages/?limit=${API_MAX_LIMIT}`;
+        url = `${HEDERA_MAIN_URL}/topics/${MANAGER_TOPIC_ID}/messages/?limit=${API_MAX_LIMIT}`;
+        break;
+      case 'lw_testnet':
+        // eslint-disable-next-line max-len
+        url = `${LEDGERWORKS_TEST_URL}/topics/${MANAGER_TOPIC_ID}/messages/?limit=${API_MAX_LIMIT}`;
+        break;
+      case 'lw_mainnet':
+        // eslint-disable-next-line max-len
+        url = `${LEDGERWORKS_MAIN_URL}/topics/${MANAGER_TOPIC_ID}/messages/?limit=${API_MAX_LIMIT}`;
         break;
       default:
         throw new Error('Invalid Network');
@@ -65,11 +75,19 @@ export const querySLDTopicMessages = async (
     switch (NETWORK) {
       case 'testnet':
         // eslint-disable-next-line max-len
-        url = `${BASE_TEST_URL}/topics/${topicId}/messages/?sequenceNumber=gte:${sequenceNumber}&limit=${API_MAX_LIMIT}`;
+        url = `${HEDERA_TEST_URL}/topics/${topicId}/messages/?sequenceNumber=gte:${sequenceNumber}&limit=${API_MAX_LIMIT}`;
         break;
       case 'mainnet':
         // eslint-disable-next-line max-len
-        url = `${BASE_MAIN_URL}/topics/${topicId}/messages/?sequenceNumber=gte:${sequenceNumber}&limit=${API_MAX_LIMIT}`;
+        url = `${HEDERA_MAIN_URL}/topics/${topicId}/messages/?sequenceNumber=gte:${sequenceNumber}&limit=${API_MAX_LIMIT}`;
+        break;
+      case 'lw_testnet':
+        // eslint-disable-next-line max-len
+        url = `${LEDGERWORKS_TEST_URL}/topics/${topicId}/messages/?sequenceNumber=gte:${sequenceNumber}&limit=${API_MAX_LIMIT}`;
+        break;
+      case 'lw_mainnet':
+        // eslint-disable-next-line max-len
+        url = `${LEDGERWORKS_MAIN_URL}/topics/${topicId}/messages/?sequenceNumber=gte:${sequenceNumber}&limit=${API_MAX_LIMIT}`;
         break;
       default:
         throw new Error('Invalid Network');
@@ -108,11 +126,18 @@ export const queryNFTOwner = async (
     let url;
     switch (NETWORK) {
       case 'testnet':
-        url = `${BASE_TEST_URL}/tokens/${tokenId.toString()}/nfts/${serial}`;
+        url = `${HEDERA_TEST_URL}/tokens/${tokenId.toString()}/nfts/${serial}`;
         break;
       case 'mainnet':
-        url = `${BASE_MAIN_URL}/tokens/${tokenId.toString()}/nfts/${serial}`;
+        url = `${HEDERA_MAIN_URL}/tokens/${tokenId.toString()}/nfts/${serial}`;
         break;
+      case 'lw_testnet':
+        url = `${LEDGERWORKS_TEST_URL}/tokens/${tokenId.toString()}/nfts/${serial}`;
+        break;
+      case 'lw_mainnet':
+        url = `${LEDGERWORKS_MAIN_URL}/tokens/${tokenId.toString()}/nfts/${serial}`;
+        break;
+
       default:
         throw new Error('Invalid Network');
     }

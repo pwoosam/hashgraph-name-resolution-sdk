@@ -4,12 +4,14 @@ export const HEDERA_SUCCESS = 22; // The transaction succeeded
 
 export const MANAGER_TOPIC_ID = '0.0.47954429';
 
-type Network = 'testnet' | 'mainnet';
+type Network = 'testnet' | 'mainnet' | 'lw_testnet' | 'lw_mainnet';
 export const NETWORK: Network = 'testnet';
 // export const NETWORK = 'mainnet';
 
-export const BASE_TEST_URL = 'https://testnet.mirrornode.hedera.com/api/v1';
-export const BASE_MAIN_URL = 'https://mainnet-public.mirrornode.hedera.com/api/v1';
+export const HEDERA_TEST_URL = 'https://testnet.mirrornode.hedera.com/api/v1';
+export const HEDERA_MAIN_URL = 'https://mainnet-public.mirrornode.hedera.com/api/v1';
+export const LEDGERWORKS_TEST_URL = 'https://testnet.mirror.lworks.io/api/v1';
+export const LEDGERWORKS_MAIN_URL = 'https://mainnet.mirror.lworks.io/api/v1';
 
 export const API_MAX_LIMIT = 100;
 

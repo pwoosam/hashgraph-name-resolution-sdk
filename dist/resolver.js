@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Resolver = void 0;
 const mirrorNode_1 = require("./mirrorNode");
-const hashDomain_1 = require("./hashDomain");
-const tldTopicId = '0.0.48097305';
+const hashDomain_1 = require("./utils/hashDomain");
+const tldTopicId = '0.0.47954429';
 class Resolver {
     constructor(networkType, authKey = '') {
         this.topLevelDomains = [];
@@ -26,7 +26,7 @@ class Resolver {
             return nft.account_id;
         }
         catch (err) {
-            throw err;
+            throw new Error('Failed to resolveSLD');
         }
     }
     ;
@@ -48,8 +48,6 @@ class Resolver {
      * @returns {Promise<TLDTopicMessage>}
      */
     getTopLevelDomain(nameHash) {
-        // console.log(nameHash.tldHash.toString('hex'));
-        // console.log(this.topLevelDomains.length);
         const found = this.topLevelDomains.find((tld) => (tld.nameHash.tldHash === nameHash.tldHash.toString('hex')));
         if (!found)
             throw new Error('TLD not found');
@@ -76,11 +74,14 @@ class Resolver {
     // Improve method to look for unexpired domains
     async getSecondLevelDomain(nameHash) {
         const tld = this.getTopLevelDomain(nameHash);
-        for (let offset = 0; offset < 5; offset++) {
+        let found = false;
+        for (let offset = 0; found; offset++) {
             const slds = await this.getSecondLevelDomains(tld.topicId, offset);
-            const sld = slds.find((sld) => sld.nameHash.domain === nameHash.domain);
-            if (sld)
-                return sld;
+            const sld = slds.find((sld) => sld.nameHash.sldHash === nameHash.sldHash.toString('hex'));
+            if (!sld)
+                continue;
+            found = true;
+            return sld;
         }
         throw new Error(`SLD message for:[${nameHash.domain}] not found on topic:[${tld.topicId.toString()}]`);
     }
