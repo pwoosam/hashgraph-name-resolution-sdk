@@ -34,9 +34,9 @@ export declare class HashgraphNames {
      */
     private resolveDomainByRestQuery;
     /**
-     * @description Resolves a Second Level Domain to the wallet address of the domain's owner
-     * @param domain: {string} The domain to query
-     * @returns {Promise<AccountId>}
-     */
+   * @description Resolves a Second Level Domain to the wallet address of the domain's owner
+   * @param domain: {string} The domain to query
+   * @returns {Promise<AccountId>}
+   */
     resolveSLD: (domain: string) => Promise<AccountId>;
 }
