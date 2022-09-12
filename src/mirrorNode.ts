@@ -22,7 +22,7 @@ export enum NetworkBaseURL {
 }
 
 // Max page size allowed by hedera nodes
-const MAX_PAGE_SIZE = 1;
+const MAX_PAGE_SIZE = 100;
 
 export class MirrorNode {
   networkType: NetworkType;
