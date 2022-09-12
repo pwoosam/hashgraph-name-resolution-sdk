@@ -6,7 +6,9 @@ import { NameHash } from './types/NameHash';
 import { SecondLevelDomain } from './types/SecondLevelDomain';
 import { TopLevelDomain } from './types/TopLevelDomain';
 
-const tldTopicId = '0.0.48097305';
+export const TEST_TLD_TOPIC_ID = '0.0.48097305';
+export const MAIN_TLD_TOPIC_ID = '0.0.1234189';
+
 
 export class Resolver {
   mirrorNode: MirrorNode;
@@ -38,12 +40,17 @@ export class Resolver {
 
   // Private
 
+  private getTldTopicId(): string {
+    if(this.mirrorNode.networkType.includes("test")) return TEST_TLD_TOPIC_ID;
+    return MAIN_TLD_TOPIC_ID;
+  }
+
   /**
    * @description Retrieves and stores top level domains
    */
   private async getTopLevelDomains(): Promise<MessagesResponse> {
     const response: MessagesResponse = await this.mirrorNode.getTopicMessages(
-      tldTopicId,
+      this.getTldTopicId(),
       null,
     );
 

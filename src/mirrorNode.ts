@@ -10,7 +10,6 @@ export type NetworkType =
   | 'arkhia_test'
   | 'arkhia_main';
 
-export const TLD_TOPIC_ID = '0.0.47954429';
 
 export enum NetworkBaseURL {
   'hedera_test' = 'https://testnet.mirrornode.hedera.com',
