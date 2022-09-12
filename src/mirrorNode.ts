@@ -1,19 +1,24 @@
 import axios, { AxiosResponse } from 'axios';
-import { MessageObject } from './types/MessageObject';
+import MessagesResponse from './types/MessagesResponse';
 import { NFT } from './types/NFT';
 
 export type NetworkType =
-  'hedera_test' | 'hedera_main' | 'lworks_test' | 'lworks_main'| 'arkhia_test' | 'arkhia_main';
+  | 'hedera_test'
+  | 'hedera_main'
+  | 'lworks_test'
+  | 'lworks_main'
+  | 'arkhia_test'
+  | 'arkhia_main';
 
 export const TLD_TOPIC_ID = '0.0.47954429';
 
 export enum NetworkBaseURL {
-  'hedera_test' = 'https://testnet.mirrornode.hedera.com/api/v1',
-  'hedera_main' = 'https://mainnet-public.mirrornode.hedera.com/api/v1',
-  'lworks_test' = 'https://testnet.mirror.lworks.io/api/v1',
-  'lworks_main' = 'https://mainnet.mirror.lworks.io/api/v1',
-  'arkhia_test' = 'https://hedera.testnet.arkhia.io/api/v1',
-  'arkhia_main' = 'https://hedera.mainnet.arkhia.io/api/v1'
+  'hedera_test' = 'https://testnet.mirrornode.hedera.com',
+  'hedera_main' = 'https://mainnet-public.mirrornode.hedera.com',
+  'lworks_test' = 'https://testnet.mirror.lworks.io',
+  'lworks_main' = 'https://mainnet.mirror.lworks.io',
+  'arkhia_test' = 'https://hedera.testnet.arkhia.io',
+  'arkhia_main' = 'https://hedera.mainnet.arkhia.io',
 }
 
 // Max page size allowed by hedera nodes
@@ -30,19 +35,23 @@ export class MirrorNode {
     this.authKey = authKey;
   }
 
-  async getTopicMessages(topicId: string, offset: number): Promise<MessageObject[]> {
-    let sequenceNumber: number;
-    offset === 0 ? sequenceNumber = offset + 1 : sequenceNumber = (offset + 1) * MAX_PAGE_SIZE;
-
-    const url =
-    `${this.getBaseUrl()}/topics/${topicId}/messages/?sequenceNumber=gte:${sequenceNumber}&limit=${MAX_PAGE_SIZE}`;
+  async getTopicMessages(
+    topicId: string,
+    next: string | null,
+  ): Promise<MessagesResponse> {
+    let url;
+    if (next) {
+      url = `${this.getBaseUrl()}${next}`;
+    } else {
+      url = `${this.getBaseUrl()}/api/v1/topics/${topicId}/messages/?limit=${MAX_PAGE_SIZE}`;
+    }
 
     const res = await this.sendGetRequest(url);
-    return res.data.messages as MessageObject[];
+    return res.data as MessagesResponse;
   }
 
   async getNFT(tokenId: string, serial: string): Promise<NFT> {
-    const url = `${this.getBaseUrl()}/tokens/${tokenId}/nfts/${serial}`;
+    const url = `${this.getBaseUrl()}/api/v1/tokens/${tokenId}/nfts/${serial}`;
     const res = await this.sendGetRequest(url);
     return res.data as NFT;
   }

@@ -22,7 +22,7 @@ export declare class Resolver {
      */
     private getTopLevelDomain;
     /**
-   * @description Retrieves and stores second level domains
+   * @description Retrieves second level domains
    */
     private getSecondLevelDomains;
     /**
