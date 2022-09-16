@@ -19,7 +19,6 @@ const hash = (sld: string[]) => sld.reduce(
  */
 const hashDomain = (domain: string): NameHash => {
   const domains: string[] = domain.split('.').reverse();
-  if (domains.length > 2) throw new Error('Invalid domain input');
 
   const sldHash = hash(domains.slice(0, 2));
   const tldHash = hash(domains.slice(0, 1));
