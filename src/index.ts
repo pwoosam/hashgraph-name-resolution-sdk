@@ -1,7 +1,7 @@
+import { domainCache } from './domainCache';
 import { hashDomain } from './hashDomain';
 import { MirrorNode, NetworkType } from './mirrorNode';
-import { MessageObject } from './types/MessageObject';
-import MessagesResponse from './types/MessagesResponse';
+import { PollingTopicSubscriber } from './topicSubscriber/pollingTopicSubscriber';
 import { NameHash } from './types/NameHash';
 import { SecondLevelDomain } from './types/SecondLevelDomain';
 import { TopLevelDomain } from './types/TopLevelDomain';
@@ -12,16 +12,15 @@ export const MAIN_TLD_TOPIC_ID = '0.0.1234189';
 
 export class Resolver {
   mirrorNode: MirrorNode;
-  topLevelDomains: TopLevelDomain[] = [];
 
   constructor(networkType: NetworkType, authKey = '') {
     this.mirrorNode = new MirrorNode(networkType, authKey);
   }
 
   public async init() {
-    const { topLevelDomains } = await this.getTopLevelDomains();
-    if (topLevelDomains) {
-      this.topLevelDomains = topLevelDomains;
+    await this.getTopLevelDomains();
+    for (const tld of Array.from(domainCache.tld.values())) {
+      await this.getSecondLevelDomains(tld.tokenId);
     }
   }
 
@@ -32,7 +31,7 @@ export class Resolver {
    */
   public async resolveSLD(domain: string): Promise<string> {
     const nameHash = hashDomain(domain);
-    const sld = await this.getSecondLevelDomain(nameHash);
+    const sld = this.getSecondLevelDomain(nameHash);
     const [tokenId, serial] = sld.nftId.split(':');
     const nft = await this.mirrorNode.getNFT(tokenId, serial);
     return nft.account_id;
@@ -48,18 +47,22 @@ export class Resolver {
   /**
    * @description Retrieves and stores top level domains
    */
-  private async getTopLevelDomains(): Promise<MessagesResponse> {
-    const response: MessagesResponse = await this.mirrorNode.getTopicMessages(
-      this.getTldTopicId(),
-      null,
-    );
+  private async getTopLevelDomains(): Promise<void> {
+    await new Promise<void>(resolve => {
+      PollingTopicSubscriber.subscribe(
+        this.mirrorNode.networkType,
+        this.getTldTopicId(),
+        messageObj => {
+          const decoded = Buffer.from(messageObj.message, 'base64').toString();
+          const tld = JSON.parse(decoded) as TopLevelDomain;
 
-    response.topLevelDomains = response.messages.map((messageObject: MessageObject) => {
-      const decoded = Buffer.from(messageObject.message, 'base64').toString();
-      return JSON.parse(decoded) as TopLevelDomain;
+          // always set the cache to the latest tld on the topic
+          domainCache.tld.set(tld.nameHash.tldHash, tld);
+        },
+        resolve,
+        undefined,
+        this.mirrorNode.authKey);
     });
-
-    return response;
   }
 
   /**
@@ -68,12 +71,11 @@ export class Resolver {
    * @returns {Promise<TLDTopicMessage>}
    */
   private getTopLevelDomain(nameHash: NameHash): TopLevelDomain {
-    const found = this.topLevelDomains.find(
-      (tld: TopLevelDomain) => tld.nameHash.tldHash === nameHash.tldHash.toString('hex'),
-    );
+    const tldHash = nameHash.tldHash.toString('hex');
+    const found = domainCache.tld.has(tldHash);
     if (!found) throw new Error('TLD not found');
 
-    return found;
+    return domainCache.tld.get(tldHash)!;
   }
 
   /**
@@ -81,19 +83,37 @@ export class Resolver {
    */
   private async getSecondLevelDomains(
     topicId: string,
-    next: string | null,
-  ): Promise<MessagesResponse> {
-    const response: MessagesResponse = await this.mirrorNode.getTopicMessages(
-      topicId,
-      next,
-    );
+  ): Promise<void> {
+    await new Promise<void>(resolve => {
+      PollingTopicSubscriber.subscribe(
+        this.mirrorNode.networkType,
+        topicId,
+        messageObj => {
+          const decoded = Buffer.from(messageObj.message, 'base64').toString();
+          const sld = JSON.parse(decoded) as SecondLevelDomain;
 
-    response.secondLevelDomains = response.messages.map((messageObject: MessageObject) => {
-      const decoded = Buffer.from(messageObject.message, 'base64').toString();
-      return JSON.parse(decoded) as SecondLevelDomain;
+          const tldHash = sld.nameHash.tldHash;
+          const sldHash = sld.nameHash.sldHash;
+          if (!domainCache.slds.has(tldHash)) {
+            const sldDomainCaches = domainCache.slds.get(tldHash)!;
+            if (sldDomainCaches.has(sldHash)) {
+              const sldDomainCache = domainCache.slds.get(sldHash)!;
+
+              // TODO: replace if the one in cache is expired
+              if (!sldDomainCache.has(sldHash)) {
+                sldDomainCache.set(sldHash, sld);
+              }
+            } else {
+              domainCache.slds.set(sldHash, new Map([
+                [sldHash, sld]
+              ]));
+            }
+          }
+        },
+        resolve,
+        undefined,
+        this.mirrorNode.authKey);
     });
-
-    return response;
   }
 
   /**
@@ -105,29 +125,19 @@ export class Resolver {
    */
 
   // Improve method to look for unexpired domains
-  private async getSecondLevelDomain(
+  private getSecondLevelDomain(
     nameHash: NameHash,
-  ): Promise<SecondLevelDomain> {
-    const tld: TopLevelDomain = this.getTopLevelDomain(nameHash);
+  ): SecondLevelDomain {
+    const tld = this.getTopLevelDomain(nameHash);
+    const tldHash = nameHash.tldHash.toString('hex');
+    const sldHash = nameHash.sldHash.toString('hex');
 
-    let sld: SecondLevelDomain | undefined;
-    let next: string | null = null;
-    do {
-      // eslint-disable-next-line no-await-in-loop
-      const { secondLevelDomains, links }: MessagesResponse = await this.getSecondLevelDomains(tld.topicId, next);
-      if (secondLevelDomains) {
-        sld = secondLevelDomains.find(
-          (item: SecondLevelDomain) => item.nameHash.sldHash === nameHash.sldHash.toString('hex'),
-        );
-        if (sld === undefined) {
-          next = links.next;
-        }
-      } else {
-        next = null;
+    if (domainCache.slds.has(tldHash)) {
+      const sldCacheForTld = domainCache.slds.get(tldHash)!;
+      if (sldCacheForTld.has(sldHash)) {
+        return sldCacheForTld.get(sldHash)!;
       }
-    } while (sld === undefined && next);
-
-    if (sld) return sld;
+    }
 
     throw new Error(
       `SLD message for:[${
