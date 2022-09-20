@@ -73,7 +73,7 @@ export class Resolver {
         },
         () => {
           this._isCaughtUpWithTopic.set(this.getTldTopicId(), true);
-          resolve()
+          resolve();
         },
         undefined,
         this.mirrorNode.authKey));
@@ -128,7 +128,7 @@ export class Resolver {
         },
         () => {
           this._isCaughtUpWithTopic.set(topicId, true);
-          resolve()
+          resolve();
         },
         undefined,
         this.mirrorNode.authKey));
