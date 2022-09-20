@@ -32,7 +32,7 @@ export class PollingTopicSubscriber {
     let lastTimestamp = startingTimestamp;
     let calledOnCaughtUp = false;
     let cancelled = false;
-    new Promise(async () => {
+    const promise = new Promise<void>(async (resolve) => {
       while (!cancelled) {
         const url = `${getBaseUrl(networkType)}/api/v1/topics/${topicId}/messages/?limit=${MAX_PAGE_SIZE}&timestamp=gt:${lastTimestamp}`;
         const response = await sendGetRequest(url, authKey).catch((err) => {
@@ -53,23 +53,24 @@ export class PollingTopicSubscriber {
           }
         }
 
-        
-        
+        if (!calledOnCaughtUp && messages.length < MAX_PAGE_SIZE) {
+          onCaughtUp();
+          calledOnCaughtUp = true;
+        }
         if (messages.length === 0) {
-          if (!calledOnCaughtUp) {
-            onCaughtUp();
-            calledOnCaughtUp = true;
-          }
           await new Promise((resolve) => setTimeout(resolve, 1000));
         } else {
           lastTimestamp = messages[messages.length - 1].consensus_timestamp;
         }
       }
+
+      resolve();
     });
 
     // Return unsubscribe method
-    return () => {
+    return async () => {
       cancelled = true;
+      await promise;
     };
   };
 }

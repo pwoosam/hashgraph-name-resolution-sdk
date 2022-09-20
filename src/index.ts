@@ -13,15 +13,27 @@ export const MAIN_TLD_TOPIC_ID = '0.0.1234189';
 export class Resolver {
   mirrorNode: MirrorNode;
 
+  private _isCaughtUpWithTopic = new Map<string, boolean>();
+  private _subscriptions: (() => void)[] = [];
+
   constructor(networkType: NetworkType, authKey = '') {
     this.mirrorNode = new MirrorNode(networkType, authKey);
   }
 
-  public async init() {
-    await this.getTopLevelDomains();
-    for (const tld of Array.from(domainCache.tld.values())) {
-      await this.getSecondLevelDomains(tld.tokenId);
-    }
+  /**
+   * @description Initializes all topic subscriptions.
+   */
+  public init() {
+    this.getTopLevelDomains().then(() => {
+      const knownTlds = Array.from(domainCache.tld.values());
+      knownTlds.forEach(tld => {
+        this.getSecondLevelDomains(tld.topicId);
+      })
+    });
+  }
+
+  public async dispose() {
+    await Promise.all(this._subscriptions.map(unsub => unsub()));
   }
 
   /**
@@ -31,7 +43,7 @@ export class Resolver {
    */
   public async resolveSLD(domain: string): Promise<string> {
     const nameHash = hashDomain(domain);
-    const sld = this.getSecondLevelDomain(nameHash);
+    const sld = await this.getSecondLevelDomain(nameHash);
     const [tokenId, serial] = sld.nftId.split(':');
     const nft = await this.mirrorNode.getNFT(tokenId, serial);
     return nft.account_id;
@@ -40,7 +52,7 @@ export class Resolver {
   // Private
 
   private getTldTopicId(): string {
-    if(this.mirrorNode.networkType.includes("test")) return TEST_TLD_TOPIC_ID;
+    if (this.mirrorNode.networkType.includes("test")) return TEST_TLD_TOPIC_ID;
     return MAIN_TLD_TOPIC_ID;
   }
 
@@ -49,7 +61,7 @@ export class Resolver {
    */
   private async getTopLevelDomains(): Promise<void> {
     await new Promise<void>(resolve => {
-      PollingTopicSubscriber.subscribe(
+      this._subscriptions.push(PollingTopicSubscriber.subscribe(
         this.mirrorNode.networkType,
         this.getTldTopicId(),
         messageObj => {
@@ -59,9 +71,12 @@ export class Resolver {
           // always set the cache to the latest tld on the topic
           domainCache.tld.set(tld.nameHash.tldHash, tld);
         },
-        resolve,
+        () => {
+          this._isCaughtUpWithTopic.set(this.getTldTopicId(), true);
+          resolve()
+        },
         undefined,
-        this.mirrorNode.authKey);
+        this.mirrorNode.authKey));
     });
   }
 
@@ -70,7 +85,11 @@ export class Resolver {
    * @param nameHash: {NameHash} The nameHash for the sld to query
    * @returns {Promise<TLDTopicMessage>}
    */
-  private getTopLevelDomain(nameHash: NameHash): TopLevelDomain {
+  private async getTopLevelDomain(nameHash: NameHash): Promise<TopLevelDomain> {
+    while (!this._isCaughtUpWithTopic.get(this.getTldTopicId())) {
+      await new Promise(resolve => setTimeout(resolve, 250));
+    }
+
     const tldHash = nameHash.tldHash.toString('hex');
     const found = domainCache.tld.has(tldHash);
     if (!found) throw new Error('TLD not found');
@@ -85,7 +104,7 @@ export class Resolver {
     topicId: string,
   ): Promise<void> {
     await new Promise<void>(resolve => {
-      PollingTopicSubscriber.subscribe(
+      this._subscriptions.push(PollingTopicSubscriber.subscribe(
         this.mirrorNode.networkType,
         topicId,
         messageObj => {
@@ -94,54 +113,57 @@ export class Resolver {
 
           const tldHash = sld.nameHash.tldHash;
           const sldHash = sld.nameHash.sldHash;
-          if (!domainCache.slds.has(tldHash)) {
-            const sldDomainCaches = domainCache.slds.get(tldHash)!;
-            if (sldDomainCaches.has(sldHash)) {
-              const sldDomainCache = domainCache.slds.get(sldHash)!;
+          if (domainCache.slds.has(tldHash)) {
+            const sldDomainCache = domainCache.slds.get(tldHash)!;
 
-              // TODO: replace if the one in cache is expired
-              if (!sldDomainCache.has(sldHash)) {
-                sldDomainCache.set(sldHash, sld);
-              }
-            } else {
-              domainCache.slds.set(sldHash, new Map([
-                [sldHash, sld]
-              ]));
+            // TODO: replace if the one in cache is expired
+            if (!sldDomainCache.has(sldHash)) {
+              sldDomainCache.set(sldHash, sld);
             }
+          } else {
+            domainCache.slds.set(tldHash, new Map([
+              [sldHash, sld]
+            ]));
           }
         },
-        resolve,
+        () => {
+          this._isCaughtUpWithTopic.set(topicId, true);
+          resolve()
+        },
         undefined,
-        this.mirrorNode.authKey);
+        this.mirrorNode.authKey));
     });
   }
 
   /**
    * @description Get the sld message on the TLD topic for a given nameHash
    * @param nameHash: {NameHash} The nameHash for the sld to query
-   * @param inputTopicId: {TopicId | null} The topic id to use for the query. If none is provided,
-   * the manager topic will be queried first to get the topic for the namehash
    * @returns {Promise<SecondLevelDomain>}
    */
 
   // Improve method to look for unexpired domains
-  private getSecondLevelDomain(
+  private async getSecondLevelDomain(
     nameHash: NameHash,
-  ): SecondLevelDomain {
-    const tld = this.getTopLevelDomain(nameHash);
+  ): Promise<SecondLevelDomain> {
+    const tld = await this.getTopLevelDomain(nameHash);
     const tldHash = nameHash.tldHash.toString('hex');
     const sldHash = nameHash.sldHash.toString('hex');
 
-    if (domainCache.slds.has(tldHash)) {
-      const sldCacheForTld = domainCache.slds.get(tldHash)!;
-      if (sldCacheForTld.has(sldHash)) {
-        return sldCacheForTld.get(sldHash)!;
+    let isCaughtUp = false;
+    while (!isCaughtUp) {
+      isCaughtUp = this._isCaughtUpWithTopic.get(tld.topicId)!;
+      if (domainCache.slds.has(tldHash)) {
+        const sldCacheForTld = domainCache.slds.get(tldHash)!;
+        if (sldCacheForTld.has(sldHash)) {
+          return sldCacheForTld.get(sldHash)!;
+        }
       }
+
+      await new Promise(resolve => setTimeout(resolve, 250));
     }
 
     throw new Error(
-      `SLD message for:[${
-        nameHash.domain
+      `SLD message for:[${nameHash.domain
       }] not found on topic:[${tld.topicId.toString()}]`,
     );
   }

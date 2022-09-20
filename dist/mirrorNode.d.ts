@@ -1,4 +1,3 @@
-import MessagesResponse from './types/MessagesResponse';
 import { NFT } from './types/NFT';
 export declare type NetworkType = 'hedera_test' | 'hedera_main' | 'lworks_test' | 'lworks_main' | 'arkhia_test' | 'arkhia_main';
 export declare enum NetworkBaseURL {
@@ -9,12 +8,13 @@ export declare enum NetworkBaseURL {
     'arkhia_test' = "https://hedera.testnet.arkhia.io",
     'arkhia_main' = "https://hedera.mainnet.arkhia.io"
 }
+export declare const getBaseUrl: (networkType: NetworkType) => NetworkBaseURL;
+export declare const MAX_PAGE_SIZE = 100;
 export declare class MirrorNode {
     networkType: NetworkType;
     baseUrl: string;
     authKey: string;
     constructor(networkType: NetworkType, authKey?: string);
-    getTopicMessages(topicId: string, next: string | null): Promise<MessagesResponse>;
     getNFT(tokenId: string, serial: string): Promise<NFT>;
     private getBaseUrl;
     private sendGetRequest;

@@ -1,4 +1,4 @@
-import { Client, Timestamp, TopicMessageQuery } from "@hashgraph/sdk";
+import { Client, TopicMessageQuery } from "@hashgraph/sdk";
 import { NetworkType } from "../mirrorNode";
 import { MessageObject } from "../types/MessageObject";
 
@@ -8,7 +8,7 @@ export class GRPCTopicSubscriber {
     topicId: string,
     onMessage: (message: MessageObject) => void,
     onCaughtUp: () => void,
-    startingTimestamp: string = `000`,
+    startingTimestamp: number = 0,
     ): () => void {
     let client = Client.forMainnet();
     if (networkType.includes('test')) {
@@ -21,7 +21,7 @@ export class GRPCTopicSubscriber {
 
     const handle = new TopicMessageQuery()
       .setTopicId(topicId)
-      .setStartTime(Timestamp.fromDate(startingTimestamp))
+      .setStartTime(startingTimestamp)
       .subscribe(
         client,
         error => {
@@ -44,7 +44,8 @@ export class GRPCTopicSubscriber {
           for (const message of messages) {
             onMessage(message);
           }
-          if (!calledOnCaughtUp && messages.length === 0) {
+
+          if (!calledOnCaughtUp && messages.length < 100) {
             onCaughtUp();
             calledOnCaughtUp = true;
           }
