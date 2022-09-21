@@ -11,7 +11,7 @@ Implementation (no key argument needs to be supplied for hedera_test and hedera_
     import { Resolver } from 'hashgraph-name-resolution-sdk'
 
     const resolver =  new Resolver('arkhia_main', 'arkhia_key');
-    await resolver.init();
+    resolver.init();
 
 Name Resolution Example:
 

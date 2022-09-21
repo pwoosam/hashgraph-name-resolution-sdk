@@ -1,5 +1,4 @@
 import axios, { AxiosResponse } from 'axios';
-import MessagesResponse from './types/MessagesResponse';
 import { NFT } from './types/NFT';
 
 export type NetworkType =
@@ -20,8 +19,27 @@ export enum NetworkBaseURL {
   'arkhia_main' = 'https://hedera.mainnet.arkhia.io',
 }
 
+export const getBaseUrl = (networkType: NetworkType) => {
+  switch (networkType) {
+    case 'hedera_test':
+      return NetworkBaseURL.hedera_test;
+    case 'hedera_main':
+      return NetworkBaseURL.hedera_main;
+    case 'lworks_test':
+      return NetworkBaseURL.lworks_test;
+    case 'lworks_main':
+      return NetworkBaseURL.lworks_main;
+    case 'arkhia_test':
+      return NetworkBaseURL.arkhia_test;
+    case 'arkhia_main':
+      return NetworkBaseURL.arkhia_main;
+    default:
+      throw new Error('No base URL available for NetworkType');
+  }
+}
+
 // Max page size allowed by hedera nodes
-const MAX_PAGE_SIZE = 100;
+export const MAX_PAGE_SIZE = 100;
 
 export class MirrorNode {
   networkType: NetworkType;
@@ -34,46 +52,16 @@ export class MirrorNode {
     this.authKey = authKey;
   }
 
-  async getTopicMessages(
-    topicId: string,
-    next: string | null,
-  ): Promise<MessagesResponse> {
-    let url;
-    if (next) {
-      url = `${this.getBaseUrl()}${next}`;
-    } else {
-      url = `${this.getBaseUrl()}/api/v1/topics/${topicId}/messages/?limit=${MAX_PAGE_SIZE}`;
-    }
-
-    const res = await this.sendGetRequest(url);
-    return res.data as MessagesResponse;
-  }
-
   async getNFT(tokenId: string, serial: string): Promise<NFT> {
     const url = `${this.getBaseUrl()}/api/v1/tokens/${tokenId}/nfts/${serial}`;
     const res = await this.sendGetRequest(url);
     return res.data as NFT;
   }
 
-  // Private
+  // Private 
 
   private getBaseUrl() {
-    switch (this.networkType) {
-      case 'hedera_test':
-        return NetworkBaseURL.hedera_test;
-      case 'hedera_main':
-        return NetworkBaseURL.hedera_main;
-      case 'lworks_test':
-        return NetworkBaseURL.lworks_test;
-      case 'lworks_main':
-        return NetworkBaseURL.lworks_main;
-      case 'arkhia_test':
-        return NetworkBaseURL.arkhia_test;
-      case 'arkhia_main':
-        return NetworkBaseURL.arkhia_main;
-      default:
-        throw new Error('No base URL available for NetworkType');
-    }
+    return getBaseUrl(this.networkType);
   }
 
   private async sendGetRequest(url: string): Promise<AxiosResponse> {

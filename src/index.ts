@@ -1,7 +1,7 @@
+import { domainCache } from './domainCache';
 import { hashDomain } from './hashDomain';
 import { MirrorNode, NetworkType } from './mirrorNode';
-import { MessageObject } from './types/MessageObject';
-import MessagesResponse from './types/MessagesResponse';
+import { PollingTopicSubscriber } from './topicSubscriber/pollingTopicSubscriber';
 import { NameHash } from './types/NameHash';
 import { SecondLevelDomain } from './types/SecondLevelDomain';
 import { TopLevelDomain } from './types/TopLevelDomain';
@@ -12,17 +12,28 @@ export const MAIN_TLD_TOPIC_ID = '0.0.1234189';
 
 export class Resolver {
   mirrorNode: MirrorNode;
-  topLevelDomains: TopLevelDomain[] = [];
+
+  private _isCaughtUpWithTopic = new Map<string, boolean>();
+  private _subscriptions: (() => void)[] = [];
 
   constructor(networkType: NetworkType, authKey = '') {
     this.mirrorNode = new MirrorNode(networkType, authKey);
   }
 
-  public async init() {
-    const { topLevelDomains } = await this.getTopLevelDomains();
-    if (topLevelDomains) {
-      this.topLevelDomains = topLevelDomains;
-    }
+  /**
+   * @description Initializes all topic subscriptions.
+   */
+  public init() {
+    this.getTopLevelDomains().then(() => {
+      const knownTlds = Array.from(domainCache.tld.values());
+      knownTlds.forEach(tld => {
+        this.getSecondLevelDomains(tld.topicId);
+      })
+    });
+  }
+
+  public async dispose() {
+    await Promise.all(this._subscriptions.map(unsub => unsub()));
   }
 
   /**
@@ -41,25 +52,32 @@ export class Resolver {
   // Private
 
   private getTldTopicId(): string {
-    if(this.mirrorNode.networkType.includes("test")) return TEST_TLD_TOPIC_ID;
+    if (this.mirrorNode.networkType.includes("test")) return TEST_TLD_TOPIC_ID;
     return MAIN_TLD_TOPIC_ID;
   }
 
   /**
    * @description Retrieves and stores top level domains
    */
-  private async getTopLevelDomains(): Promise<MessagesResponse> {
-    const response: MessagesResponse = await this.mirrorNode.getTopicMessages(
-      this.getTldTopicId(),
-      null,
-    );
+  private async getTopLevelDomains(): Promise<void> {
+    await new Promise<void>(resolve => {
+      this._subscriptions.push(PollingTopicSubscriber.subscribe(
+        this.mirrorNode.networkType,
+        this.getTldTopicId(),
+        messageObj => {
+          const decoded = Buffer.from(messageObj.message, 'base64').toString();
+          const tld = JSON.parse(decoded) as TopLevelDomain;
 
-    response.topLevelDomains = response.messages.map((messageObject: MessageObject) => {
-      const decoded = Buffer.from(messageObject.message, 'base64').toString();
-      return JSON.parse(decoded) as TopLevelDomain;
+          // always set the cache to the latest tld on the topic
+          domainCache.tld.set(tld.nameHash.tldHash, tld);
+        },
+        () => {
+          this._isCaughtUpWithTopic.set(this.getTldTopicId(), true);
+          resolve();
+        },
+        undefined,
+        this.mirrorNode.authKey));
     });
-
-    return response;
   }
 
   /**
@@ -67,13 +85,16 @@ export class Resolver {
    * @param nameHash: {NameHash} The nameHash for the sld to query
    * @returns {Promise<TLDTopicMessage>}
    */
-  private getTopLevelDomain(nameHash: NameHash): TopLevelDomain {
-    const found = this.topLevelDomains.find(
-      (tld: TopLevelDomain) => tld.nameHash.tldHash === nameHash.tldHash.toString('hex'),
-    );
+  private async getTopLevelDomain(nameHash: NameHash): Promise<TopLevelDomain> {
+    while (!this._isCaughtUpWithTopic.get(this.getTldTopicId())) {
+      await new Promise(resolve => setTimeout(resolve, 250));
+    }
+
+    const tldHash = nameHash.tldHash.toString('hex');
+    const found = domainCache.tld.has(tldHash);
     if (!found) throw new Error('TLD not found');
 
-    return found;
+    return domainCache.tld.get(tldHash)!;
   }
 
   /**
@@ -81,26 +102,42 @@ export class Resolver {
    */
   private async getSecondLevelDomains(
     topicId: string,
-    next: string | null,
-  ): Promise<MessagesResponse> {
-    const response: MessagesResponse = await this.mirrorNode.getTopicMessages(
-      topicId,
-      next,
-    );
+  ): Promise<void> {
+    await new Promise<void>(resolve => {
+      this._subscriptions.push(PollingTopicSubscriber.subscribe(
+        this.mirrorNode.networkType,
+        topicId,
+        messageObj => {
+          const decoded = Buffer.from(messageObj.message, 'base64').toString();
+          const sld = JSON.parse(decoded) as SecondLevelDomain;
 
-    response.secondLevelDomains = response.messages.map((messageObject: MessageObject) => {
-      const decoded = Buffer.from(messageObject.message, 'base64').toString();
-      return JSON.parse(decoded) as SecondLevelDomain;
+          const tldHash = sld.nameHash.tldHash;
+          const sldHash = sld.nameHash.sldHash;
+          if (domainCache.slds.has(tldHash)) {
+            const sldDomainCache = domainCache.slds.get(tldHash)!;
+
+            // TODO: replace if the one in cache is expired
+            if (!sldDomainCache.has(sldHash)) {
+              sldDomainCache.set(sldHash, sld);
+            }
+          } else {
+            domainCache.slds.set(tldHash, new Map([
+              [sldHash, sld]
+            ]));
+          }
+        },
+        () => {
+          this._isCaughtUpWithTopic.set(topicId, true);
+          resolve();
+        },
+        undefined,
+        this.mirrorNode.authKey));
     });
-
-    return response;
   }
 
   /**
    * @description Get the sld message on the TLD topic for a given nameHash
    * @param nameHash: {NameHash} The nameHash for the sld to query
-   * @param inputTopicId: {TopicId | null} The topic id to use for the query. If none is provided,
-   * the manager topic will be queried first to get the topic for the namehash
    * @returns {Promise<SecondLevelDomain>}
    */
 
@@ -108,30 +145,25 @@ export class Resolver {
   private async getSecondLevelDomain(
     nameHash: NameHash,
   ): Promise<SecondLevelDomain> {
-    const tld: TopLevelDomain = this.getTopLevelDomain(nameHash);
+    const tld = await this.getTopLevelDomain(nameHash);
+    const tldHash = nameHash.tldHash.toString('hex');
+    const sldHash = nameHash.sldHash.toString('hex');
 
-    let sld: SecondLevelDomain | undefined;
-    let next: string | null = null;
-    do {
-      // eslint-disable-next-line no-await-in-loop
-      const { secondLevelDomains, links }: MessagesResponse = await this.getSecondLevelDomains(tld.topicId, next);
-      if (secondLevelDomains) {
-        sld = secondLevelDomains.find(
-          (item: SecondLevelDomain) => item.nameHash.sldHash === nameHash.sldHash.toString('hex'),
-        );
-        if (sld === undefined) {
-          next = links.next;
+    let isCaughtUp = false;
+    while (!isCaughtUp) {
+      isCaughtUp = this._isCaughtUpWithTopic.get(tld.topicId)!;
+      if (domainCache.slds.has(tldHash)) {
+        const sldCacheForTld = domainCache.slds.get(tldHash)!;
+        if (sldCacheForTld.has(sldHash)) {
+          return sldCacheForTld.get(sldHash)!;
         }
-      } else {
-        next = null;
       }
-    } while (sld === undefined && next);
 
-    if (sld) return sld;
+      await new Promise(resolve => setTimeout(resolve, 250));
+    }
 
     throw new Error(
-      `SLD message for:[${
-        nameHash.domain
+      `SLD message for:[${nameHash.domain
       }] not found on topic:[${tld.topicId.toString()}]`,
     );
   }
