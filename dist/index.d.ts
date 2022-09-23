@@ -21,7 +21,7 @@ export declare class Resolver {
      * @param domain: {string} The domain to query
      * @returns {Promise<AccountId>}
      */
-    resolveSLD(domain: string): Promise<string>;
+    resolveSLD(domain: string): Promise<string | undefined>;
     private getTldTopicId;
     /**
      * @description Retrieves and stores top level domains
@@ -42,5 +42,5 @@ export declare class Resolver {
      * @param nameHash: {NameHash} The nameHash for the sld to query
      * @returns {Promise<SecondLevelDomain>}
      */
-    getSecondLevelDomain(nameHash: NameHash): Promise<SecondLevelDomain>;
+    getSecondLevelDomain(nameHash: NameHash): Promise<SecondLevelDomain | undefined>;
 }

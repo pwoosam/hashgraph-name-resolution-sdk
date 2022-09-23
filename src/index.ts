@@ -42,7 +42,7 @@ export class Resolver {
    */
   public init() {
     this.getTopLevelDomains().then(() => {
-      Promise.resolve(this.cache.getTlds()).then((knownTlds) => {
+      this.cache.getTlds().then((knownTlds) => {
         if (knownTlds) {
           knownTlds.forEach((tld) => {
             this.getSecondLevelDomains(tld.topicId);
@@ -61,12 +61,16 @@ export class Resolver {
    * @param domain: {string} The domain to query
    * @returns {Promise<AccountId>}
    */
-  public async resolveSLD(domain: string): Promise<string> {
+  public async resolveSLD(domain: string): Promise<string | undefined> {
     const nameHash = hashDomain(domain);
     const sld = await this.getSecondLevelDomain(nameHash);
-    const [tokenId, serial] = sld.nftId.split(":");
-    const nft = await this.mirrorNode.getNFT(tokenId, serial);
-    return nft.account_id;
+    if (sld) {
+      const [tokenId, serial] = sld.nftId.split(":");
+      const nft = await this.mirrorNode.getNFT(tokenId, serial);
+      return nft.account_id;
+    } else {
+      return Promise.resolve(undefined);
+    }
   }
 
   // Private
@@ -111,7 +115,9 @@ export class Resolver {
    * @param nameHash: {NameHash} The nameHash for the sld to query
    * @returns {Promise<TLDTopicMessage>}
    */
-  private async getTopLevelDomain(nameHash: NameHash): Promise<TopLevelDomain> {
+  private async getTopLevelDomain(
+    nameHash: NameHash
+  ): Promise<TopLevelDomain | undefined> {
     while (!this._isCaughtUpWithTopic.get(this.getTldTopicId())) {
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
@@ -145,8 +151,10 @@ export class Resolver {
 
             const tldHash = sld.nameHash.tldHash;
             const sldHash = sld.nameHash.sldHash;
-            if (this.cache.hasTld(tldHash)) {
-              const cachedSld = await Promise.resolve(this.cache.getSld(tldHash, sldHash)!);
+            if (await this.cache.hasTld(tldHash)) {
+              const cachedSld = await Promise.resolve(
+                this.cache.getSld(tldHash, sldHash)!
+              );
               // TODO: replace if the one in cache is expired
               if (!cachedSld) {
                 this.cache.setSld(tldHash, sld);
@@ -175,15 +183,16 @@ export class Resolver {
   // Improve method to look for unexpired domains
   public async getSecondLevelDomain(
     nameHash: NameHash
-  ): Promise<SecondLevelDomain> {
+  ): Promise<SecondLevelDomain | undefined> {
     const tld = await this.getTopLevelDomain(nameHash);
+    if (!tld) return undefined;
     const tldHash = nameHash.tldHash.toString("hex");
     const sldHash = nameHash.sldHash.toString("hex");
 
     let isCaughtUp = false;
     while (!isCaughtUp) {
       isCaughtUp = this._isCaughtUpWithTopic.get(tld.topicId)!;
-      if (this.cache.hasSld(tldHash, sldHash)) {
+      if (await this.cache.hasSld(tldHash, sldHash)) {
         return this.cache.getSld(tldHash, sldHash)!;
       }
       await new Promise((resolve) => setTimeout(resolve, 250));

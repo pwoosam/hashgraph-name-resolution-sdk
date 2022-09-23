@@ -24,7 +24,7 @@ class Resolver {
      */
     init() {
         this.getTopLevelDomains().then(() => {
-            Promise.resolve(this.cache.getTlds()).then((knownTlds) => {
+            this.cache.getTlds().then((knownTlds) => {
                 if (knownTlds) {
                     knownTlds.forEach((tld) => {
                         this.getSecondLevelDomains(tld.topicId);
@@ -44,9 +44,14 @@ class Resolver {
     async resolveSLD(domain) {
         const nameHash = (0, hashDomain_1.hashDomain)(domain);
         const sld = await this.getSecondLevelDomain(nameHash);
-        const [tokenId, serial] = sld.nftId.split(":");
-        const nft = await this.mirrorNode.getNFT(tokenId, serial);
-        return nft.account_id;
+        if (sld) {
+            const [tokenId, serial] = sld.nftId.split(":");
+            const nft = await this.mirrorNode.getNFT(tokenId, serial);
+            return nft.account_id;
+        }
+        else {
+            return Promise.resolve(undefined);
+        }
     }
     // Private
     getTldTopicId() {
@@ -98,7 +103,7 @@ class Resolver {
                 }
                 const tldHash = sld.nameHash.tldHash;
                 const sldHash = sld.nameHash.sldHash;
-                if (this.cache.hasTld(tldHash)) {
+                if (await this.cache.hasTld(tldHash)) {
                     const cachedSld = await Promise.resolve(this.cache.getSld(tldHash, sldHash));
                     // TODO: replace if the one in cache is expired
                     if (!cachedSld) {
@@ -122,12 +127,14 @@ class Resolver {
     // Improve method to look for unexpired domains
     async getSecondLevelDomain(nameHash) {
         const tld = await this.getTopLevelDomain(nameHash);
+        if (!tld)
+            return undefined;
         const tldHash = nameHash.tldHash.toString("hex");
         const sldHash = nameHash.sldHash.toString("hex");
         let isCaughtUp = false;
         while (!isCaughtUp) {
             isCaughtUp = this._isCaughtUpWithTopic.get(tld.topicId);
-            if (this.cache.hasSld(tldHash, sldHash)) {
+            if (await this.cache.hasSld(tldHash, sldHash)) {
                 return this.cache.getSld(tldHash, sldHash);
             }
             await new Promise((resolve) => setTimeout(resolve, 250));
