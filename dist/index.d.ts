@@ -1,11 +1,16 @@
-import { MirrorNode, NetworkType } from './mirrorNode';
+import { MirrorNode, NetworkType } from "./mirrorNode";
+import { ICache } from "./types/Cache";
+import { NameHash } from "./types/NameHash";
+import { SecondLevelDomain } from "./types/SecondLevelDomain";
 export declare const TEST_TLD_TOPIC_ID = "0.0.48097305";
 export declare const MAIN_TLD_TOPIC_ID = "0.0.1234189";
+export { ICache, Links, MessageObject, MessagesResponse, NFT, NFTsResponse, NameHash, SecondLevelDomain, TopLevelDomain, } from "./types";
 export declare class Resolver {
     mirrorNode: MirrorNode;
     private _isCaughtUpWithTopic;
     private _subscriptions;
-    constructor(networkType: NetworkType, authKey?: string);
+    private cache;
+    constructor(networkType: NetworkType, authKey?: string, cache?: ICache);
     /**
      * @description Initializes all topic subscriptions.
      */
@@ -16,7 +21,7 @@ export declare class Resolver {
      * @param domain: {string} The domain to query
      * @returns {Promise<AccountId>}
      */
-    resolveSLD(domain: string): Promise<string>;
+    resolveSLD(domain: string): Promise<string | undefined>;
     private getTldTopicId;
     /**
      * @description Retrieves and stores top level domains
@@ -37,5 +42,5 @@ export declare class Resolver {
      * @param nameHash: {NameHash} The nameHash for the sld to query
      * @returns {Promise<SecondLevelDomain>}
      */
-    private getSecondLevelDomain;
+    getSecondLevelDomain(nameHash: NameHash): Promise<SecondLevelDomain | undefined>;
 }
