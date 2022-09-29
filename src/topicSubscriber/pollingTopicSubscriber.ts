@@ -78,7 +78,12 @@ export class PollingTopicSubscriber {
           }
         }
 
-        if (!calledOnCaughtUp && messages[messages.length - 1].sequence_number >= latestSequenceNumber) {
+        let lastSequenceNumberFromMessages = 0;
+        if (messages.length) {
+          lastSequenceNumberFromMessages = messages[messages.length - 1].sequence_number;
+        }
+
+        if (!calledOnCaughtUp && lastSequenceNumberFromMessages >= latestSequenceNumber) {
           onCaughtUp();
           calledOnCaughtUp = true;
         }
