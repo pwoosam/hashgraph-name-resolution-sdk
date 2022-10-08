@@ -1,16 +1,15 @@
 import { MirrorNode, NetworkType } from "./mirrorNode";
-import { ICache } from "./types/Cache";
-import { NameHash } from "./types/NameHash";
-import { SecondLevelDomain } from "./types/SecondLevelDomain";
+import { ICache, NameHash, ResolverOptions, SecondLevelDomain } from "./types";
 export declare const TEST_TLD_TOPIC_ID = "0.0.48097305";
 export declare const MAIN_TLD_TOPIC_ID = "0.0.1234189";
-export { ICache, Links, MessageObject, MessagesResponse, NFT, NFTsResponse, NameHash, SecondLevelDomain, TopLevelDomain, } from "./types";
+export { ICache, Links, MessageObject, MessagesResponse, NFT, NFTsResponse, NameHash, SecondLevelDomain, TopLevelDomain, ResolverOptions, } from "./types";
 export declare class Resolver {
     mirrorNode: MirrorNode;
+    private _options?;
     private _isCaughtUpWithTopic;
     private _subscriptions;
     private cache;
-    constructor(networkType: NetworkType, authKey?: string, cache?: ICache);
+    constructor(networkType: NetworkType, authKey?: string, cache?: ICache, options?: ResolverOptions);
     /**
      * @description Initializes all topic subscriptions.
      */
