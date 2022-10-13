@@ -11,6 +11,7 @@ class Resolver {
     constructor(networkType, authKey = "", cache) {
         this._isCaughtUpWithTopic = new Map();
         this._subscriptions = [];
+        this.isCaughtUpPromise = Promise.resolve();
         this.mirrorNode = new mirrorNode_1.MirrorNode(networkType, authKey);
         if (!cache) {
             this.cache = new MemoryCache_1.MemoryCache();
@@ -23,14 +24,17 @@ class Resolver {
      * @description Initializes all topic subscriptions.
      */
     init() {
-        this.getTopLevelDomains().then(() => {
-            this.cache.getTlds().then((knownTlds) => {
+        this.isCaughtUpPromise = this.getTopLevelDomains().then(async () => {
+            const promises = [];
+            await this.cache.getTlds().then((knownTlds) => {
                 if (knownTlds) {
-                    knownTlds.forEach((tld) => {
-                        this.getSecondLevelDomains(tld.topicId);
-                    });
+                    for (const tld of knownTlds) {
+                        const sldsCaughtUpPromise = this.getSecondLevelDomains(tld.topicId);
+                        promises.push(sldsCaughtUpPromise);
+                    }
                 }
             });
+            await Promise.all(promises);
         });
     }
     async dispose() {
@@ -52,6 +56,29 @@ class Resolver {
         else {
             return Promise.resolve(undefined);
         }
+    }
+    async getAllDomainsForAccount(accountIdOrDomain) {
+        let accountId = accountIdOrDomain;
+        if (!accountIdOrDomain.startsWith('0.0.')) {
+            const accountIdFromDomain = await this.resolveSLD(accountIdOrDomain);
+            if (accountIdFromDomain) {
+                accountId = accountIdFromDomain;
+            }
+            else {
+                return [];
+            }
+        }
+        const tokenIds = await this.cache.getTokenIds();
+        if (tokenIds.length === 0) {
+            return [];
+        }
+        const nftInfos = await Promise.all(tokenIds.map(tokenId => {
+            return this.mirrorNode.getNFTsByAccountId(tokenId, accountId);
+        }));
+        const slds = await Promise.all(nftInfos
+            .flat()
+            .map(o => this.cache.getSldByNftId(`${o.token_id}:${o.serial_number}`)));
+        return slds.filter(sld => sld !== undefined).map(sld => sld.nameHash.domain);
     }
     // Private
     getTldTopicId() {
