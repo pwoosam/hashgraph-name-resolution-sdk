@@ -2,10 +2,7 @@ import { hashDomain } from "./hashDomain";
 import { MemoryCache } from "./MemoryCache";
 import { MirrorNode, NetworkType } from "./mirrorNode";
 import { PollingTopicSubscriber } from "./topicSubscriber/pollingTopicSubscriber";
-import { ICache } from "./types/Cache";
-import { NameHash } from "./types/NameHash";
-import { SecondLevelDomain } from "./types/SecondLevelDomain";
-import { TopLevelDomain } from "./types/TopLevelDomain";
+import { ICache, NameHash, ResolverOptions, SecondLevelDomain, TopLevelDomain } from "./types";
 
 export const TEST_TLD_TOPIC_ID = "0.0.48097305";
 export const MAIN_TLD_TOPIC_ID = "0.0.1234189";
@@ -20,22 +17,28 @@ export {
   NameHash,
   SecondLevelDomain,
   TopLevelDomain,
+  ResolverOptions,
 } from "./types";
 
 export class Resolver {
   mirrorNode: MirrorNode;
+  private _options?: ResolverOptions;
   private _isCaughtUpWithTopic = new Map<string, boolean>();
   private _subscriptions: (() => void)[] = [];
   private cache: ICache;
 
   isCaughtUpPromise: Promise<unknown> = Promise.resolve();
 
-  constructor(networkType: NetworkType, authKey = "", cache?: ICache) {
+  constructor(networkType: NetworkType, authKey = "", cache?: ICache, options?: ResolverOptions) {
     this.mirrorNode = new MirrorNode(networkType, authKey);
     if (!cache) {
       this.cache = new MemoryCache();
     } else {
       this.cache = cache;
+    }
+
+    if (options) {
+      this._options = options;
     }
   }
 
@@ -137,7 +140,8 @@ export class Resolver {
             resolve();
           },
           undefined,
-          this.mirrorNode.authKey
+          this.mirrorNode.authKey,
+          this._options
         )
       );
     });
@@ -201,7 +205,8 @@ export class Resolver {
             resolve();
           },
           undefined,
-          this.mirrorNode.authKey
+          this.mirrorNode.authKey,
+          this._options
         )
       );
     });

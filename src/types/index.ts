@@ -5,6 +5,7 @@ import MessagesResponse from './MessagesResponse';
 import { NameHash } from './NameHash';
 import { NFT } from './NFT';
 import { NFTsResponse } from './NFTsResponse';
+import { ResolverOptions } from './ResolverOptions';
 import { SecondLevelDomain } from './SecondLevelDomain';
 import { TopLevelDomain } from './TopLevelDomain';
 
@@ -17,5 +18,6 @@ export {
     NFT,
     NFTsResponse,
     SecondLevelDomain,
-    TopLevelDomain
+    TopLevelDomain,
+    ResolverOptions
 }
