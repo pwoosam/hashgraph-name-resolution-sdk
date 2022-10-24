@@ -10,6 +10,7 @@ export declare class Resolver {
     private _isCaughtUpWithTopic;
     private _subscriptions;
     private cache;
+    isCaughtUpPromise: Promise<unknown>;
     constructor(networkType: NetworkType, authKey?: string, cache?: ICache);
     /**
      * @description Initializes all topic subscriptions.
@@ -22,6 +23,7 @@ export declare class Resolver {
      * @returns {Promise<AccountId>}
      */
     resolveSLD(domain: string): Promise<string | undefined>;
+    getAllDomainsForAccount(accountIdOrDomain: string): Promise<string[]>;
     private getTldTopicId;
     /**
      * @description Retrieves and stores top level domains
