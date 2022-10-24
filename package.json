@@ -1,7 +1,7 @@
 {
-  "name": "hashgraph-name-resolution-sdk",
+  "name": "@pwoosam/hashgraph-name-resolution-sdk",
   "version": "3.1.7",
-  "description": "",
+  "description": "In **pieFi**'s effort to create a web3 username public good, we'd like to also deliver a public SDK available for use by any entity that wants to resolve hashgraph names to empower their own solutions.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
