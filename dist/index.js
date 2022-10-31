@@ -8,7 +8,7 @@ const pollingTopicSubscriber_1 = require("./topicSubscriber/pollingTopicSubscrib
 exports.TEST_TLD_TOPIC_ID = "0.0.48097305";
 exports.MAIN_TLD_TOPIC_ID = "0.0.1234189";
 class Resolver {
-    constructor(networkType, authKey = "", cache) {
+    constructor(networkType, authKey = "", cache, options) {
         this._isCaughtUpWithTopic = new Map();
         this._subscriptions = [];
         this.mirrorNode = new mirrorNode_1.MirrorNode(networkType, authKey);
@@ -17,6 +17,9 @@ class Resolver {
         }
         else {
             this.cache = cache;
+        }
+        if (options) {
+            this._options = options;
         }
     }
     /**
@@ -72,7 +75,7 @@ class Resolver {
             }, () => {
                 this._isCaughtUpWithTopic.set(this.getTldTopicId(), true);
                 resolve();
-            }, undefined, this.mirrorNode.authKey));
+            }, undefined, this.mirrorNode.authKey, this._options));
         });
     }
     /**
@@ -116,7 +119,7 @@ class Resolver {
             }, () => {
                 this._isCaughtUpWithTopic.set(topicId, true);
                 resolve();
-            }, undefined, this.mirrorNode.authKey));
+            }, undefined, this.mirrorNode.authKey, this._options));
         });
     }
     /**

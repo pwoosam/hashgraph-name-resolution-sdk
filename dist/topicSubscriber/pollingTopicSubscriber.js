@@ -38,7 +38,8 @@ const sendGetRequest = async (url, authKey) => {
     }, () => true);
 };
 class PollingTopicSubscriber {
-    static subscribe(networkType, topicId, onMessage, onCaughtUp, startingTimestamp = `000`, authKey) {
+    static subscribe(networkType, topicId, onMessage, onCaughtUp, startingTimestamp = `000`, authKey, options) {
+        const pollingInterval = options && options.pollingInterval ? options.pollingInterval : 60 * 1000;
         let lastTimestamp = startingTimestamp;
         let calledOnCaughtUp = false;
         let cancelled = false;
@@ -76,7 +77,22 @@ class PollingTopicSubscriber {
                     calledOnCaughtUp = true;
                 }
                 if (messages.length === 0) {
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    await new Promise((resolve) => {
+                        let intervalHandle = undefined;
+                        let timeoutHandle = undefined;
+                        // This interval allows the promise to resolve early if the subscription is cancelled
+                        intervalHandle = setInterval(() => {
+                            if (cancelled) {
+                                resolve();
+                                clearTimeout(timeoutHandle);
+                            }
+                        }, 250);
+                        // This timeout will resolve the promise after the pollingInterval has ellapsed
+                        timeoutHandle = setTimeout(() => {
+                            resolve();
+                            clearInterval(intervalHandle);
+                        }, pollingInterval);
+                    });
                 }
                 else {
                     lastTimestamp = messages[messages.length - 1].consensus_timestamp;
