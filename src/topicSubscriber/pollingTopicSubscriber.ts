@@ -2,6 +2,7 @@ import axios from "axios";
 import { getBaseUrl, MAX_PAGE_SIZE, NetworkType } from "../mirrorNode";
 import { MessageObject } from "../types/MessageObject";
 import MessagesResponse from "../types/MessagesResponse";
+import { ResolverOptions } from "../types/ResolverOptions";
 
 export const executeWithRetriesAsync = async <T>(func: (retryNum: number) => Promise<T>, shouldRetry: (err: any) => boolean, maxRetries = 5): Promise<T> => {
   let retryNum = 0;
@@ -46,7 +47,10 @@ export class PollingTopicSubscriber {
     onCaughtUp: () => void,
     startingTimestamp: string = `000`,
     authKey?: string,
+    options?: ResolverOptions
   ): () => void {
+    const pollingInterval = options && options.pollingInterval ? options.pollingInterval : 60 * 1000;
+
     let lastTimestamp = startingTimestamp;
     let calledOnCaughtUp = false;
     let cancelled = false;
@@ -78,13 +82,35 @@ export class PollingTopicSubscriber {
           }
         }
 
-        if (!calledOnCaughtUp && messages[messages.length - 1].sequence_number >= latestSequenceNumber) {
+        let lastSequenceNumberFromMessages = 0;
+        if (messages.length) {
+          lastSequenceNumberFromMessages = messages[messages.length - 1].sequence_number;
+        }
+
+        if (!calledOnCaughtUp && lastSequenceNumberFromMessages >= latestSequenceNumber) {
           onCaughtUp();
           calledOnCaughtUp = true;
         }
 
         if (messages.length === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise<void>((resolve) => {
+            let intervalHandle: NodeJS.Timeout | undefined = undefined;
+            let timeoutHandle: NodeJS.Timer | undefined = undefined;
+
+            // This interval allows the promise to resolve early if the subscription is cancelled
+            intervalHandle = setInterval(() => {
+              if (cancelled) {
+                resolve();
+                clearTimeout(timeoutHandle);
+              }
+            }, 250);
+
+            // This timeout will resolve the promise after the pollingInterval has ellapsed
+            timeoutHandle = setTimeout(() => {
+              resolve();
+              clearInterval(intervalHandle);
+            }, pollingInterval);
+          });
         } else {
           lastTimestamp = messages[messages.length - 1].consensus_timestamp;
         }
